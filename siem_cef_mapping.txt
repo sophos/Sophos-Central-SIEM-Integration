@@ -1,0 +1,18 @@
+# This file is used for mapping CEF header prefix and extension to json returned by server
+
+# CEF header prefix to json mapping
+# Format
+# CEF_header_prefix JSON_key
+device_event_class_id type
+name name
+severity severity
+
+# json to CEF extension mapping
+# Format
+# JSON_key CEF_extension
+source suser
+when end
+user_id duid
+created_at rt
+full_file_path filePath
+location dhost
