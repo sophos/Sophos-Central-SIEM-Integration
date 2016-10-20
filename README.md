@@ -1,4 +1,4 @@
-# SIEM Sample Script
+# SIEM Script
 
 #### Powered By Sophos Central
 ![N|Solid](https://www.sophos.com/en-us/medialibrary/SophosNext/Images/LP/SophosCentral/central-logo-cir.png?la=en)
@@ -11,7 +11,7 @@ Any issues discovered using the samples should be reported on the Github
 issues tracker.
 
 
-### SIEM Sample
+### SIEM 
 
 Script in this directory demonstrate how to use the SIEM Event API.
 
