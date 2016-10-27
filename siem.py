@@ -22,7 +22,6 @@ elif cur_version < req_version:
     sys.exit(1)
 import calendar
 import ConfigParser
-import collections
 import datetime
 import json
 import logging
@@ -289,14 +288,16 @@ def write_keyvalue_format(results, siem_logger):
         i = remove_null_values(i)
         update_cef_keys(i)
         update_name_field(i)
-        date = i[u'created_at']
-        events = list('%s="%s";' % (k, (convert(v))) for k, v in i.items())
+        date = i[u'rt']
+        events = list('%s="%s";' % (k, v) for k, v in i.items())
         siem_logger.info(' '.join([date, ] + events) + u'\n')
 
 
 # Split 'name' field into multiple fields based on regex and field names specified in the name_mapping.txt
 # Original 'name' field is replaced with the first value returned by regex used for splitting 'name' field.
 def update_name_field(data):
+    if u'description' in data.keys():
+        data[u'name'] = data[u'description']
     if data[u'type'] in NAME_MAPPING:
         try:
             # name_list has a compiled regex followed by new field names in which name field needs to be split into.
@@ -312,20 +313,6 @@ def update_name_field(data):
         except:
             e = sys.exc_info()[0]
             log("Failed to split name field for event type %s, error %s" % (data[u'type'], e))
-
-
-# Fastest way to convert a dict's keys & values from `unicode` to `str`?
-# from http://stackoverflow.com/questions/1254454/fastest-way-to-convert-a-dicts-keys-values-from-unicode-to-str
-def convert(data):
-    # encoding unicode strings with utf8
-    # print type(data)
-    if isinstance(data, unicode):
-        return data.encode('utf8')
-    elif isinstance(data, collections.Mapping):
-        return dict(map(convert, data.iteritems()))
-    elif isinstance(data, collections.Iterable):
-        return type(data)(map(convert, data))
-    return str(data)
 
 
 def write_cef_format(results, siem_logger):
