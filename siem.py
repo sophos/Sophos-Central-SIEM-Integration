@@ -269,12 +269,6 @@ def process_endpoint(endpoint, opener, endpoint_config, creds):
         write_json_format(results, siem_logger)
 
 
-def to_str(data):
-    if isinstance(data, unicode):
-        return data.encode('utf8')
-    return str(data)
-
-
 def write_json_format(results, siem_logger):
     for i in results:
         i = remove_null_values(i)
@@ -463,14 +457,12 @@ def request_url(opener, request):
 
 def format_prefix(data):
     # pipe and backslash in header must be escaped
-    data = to_str(data)
     # escape group with backslash
     return PREFIX_PATTERN.sub(r'\\\1', data)
 
 
 def format_extension(data):
     # equal sign and backslash in extension value must be escaped
-    data = to_str(data)
     # escape group with backslash
     return EXTENSION_PATTERN.sub(r'\\\1', data)
 
@@ -515,10 +507,10 @@ def extract_prefix_fields(data):
 def update_cef_keys(data):
     # Replace if there is a mapped CEF key
     for key, value in list(data.items()):
-        new_key = CEF_MAPPING.get(to_str(key), key)
+        new_key = CEF_MAPPING.get(key, key)
         if new_key == key:
             continue
-        data[new_key] = to_str(value)
+        data[new_key] = value
         del data[key]
 
 
