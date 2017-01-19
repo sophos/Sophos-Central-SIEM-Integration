@@ -32,6 +32,7 @@ import re
 import socket
 import time
 import urllib2
+import unicodedata
 from optparse import OptionParser
 from random import randint
 
@@ -464,7 +465,11 @@ def format_prefix(data):
 def format_extension(data):
     # equal sign and backslash in extension value must be escaped
     # escape group with backslash
-    return EXTENSION_PATTERN.sub(r'\\\1', data)
+    try:
+        return EXTENSION_PATTERN.sub(r'\\\1', data)
+    except UnicodeEncodeError as e:
+        data = unicodedata.normalize('NFKD', data).encode('ascii','ignore')
+        return EXTENSION_PATTERN.sub(r'\\\1', data)
 
 
 def map_severity(severity):
