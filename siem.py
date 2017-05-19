@@ -212,7 +212,7 @@ def main():
 def process_endpoint(endpoint, opener, endpoint_config, creds):
     state_file_name = "siem_lastrun_" + endpoint.rsplit('/', 1)[-1] + ".obj"
     state_file_path = os.path.join(endpoint_config['state_dir'], state_file_name)
-    if LIGHT and endpoint == ENDPOINT_MAP['event']:
+    if LIGHT and endpoint == ENDPOINT_MAP['event'][0]:
         log("Light mode - not retrieving:%s" % '; '.join(NOISY_EVENTTYPES))
 
     log("Config endpoint=%s, filename='%s' and format='%s'" %
@@ -348,7 +348,7 @@ def call_endpoint(opener, endpoint, since, cursor, state_file_path, creds):
         jitter()
 
     while True:
-        if LIGHT and endpoint == ENDPOINT_MAP['event']:
+        if LIGHT and endpoint == ENDPOINT_MAP['event'][0]:
             types = ','.join(["%s" % t for t in NOISY_EVENTTYPES])
             types = 'exclude_types=' + types
             args = '&'.join(['%s=%s' % (k, v) for k, v in params.items()]+[types, ])
@@ -464,7 +464,10 @@ def format_prefix(data):
 def format_extension(data):
     # equal sign and backslash in extension value must be escaped
     # escape group with backslash
-    return EXTENSION_PATTERN.sub(r'\\\1', data)
+    if type(data) is str:
+        return EXTENSION_PATTERN.sub(r'\\\1', data)
+    else:
+        return data
 
 
 def map_severity(severity):
