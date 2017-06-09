@@ -1,15 +1,16 @@
 # This file is used for splitting 'name' field into its parts using the provided regex.
 
-# Format
-# type regex_to_split_name_field new_field_name_1 new_field_name_2 .....
-Event::Endpoint::Threat::Detected \'(.*?)\' detection_identity_name filePath
-Event::Endpoint::Threat::CleanedUp \'(.*?)\' detection_identity_name filePath
-Event::Endpoint::Threat::HIPSDismissed \'(.*?)\' detection_identity_name filePath
-Event::Endpoint::Threat::HIPSDetected \'(.*?)\' detection_identity_name filePath
-Event::Endpoint::Threat::PuaDetected \'(.*?)\' detection_identity_name filePath
-Event::Endpoint::Threat::PuaCleanupFailed \'(.*?)\' detection_identity_name filePath
-Event::Endpoint::Threat::HIPSDetected \'(.*?)\' detection_identity_name filePath
-Event::Endpoint::Threat::HIPSDismissed \'(.*?)\' detection_identity_name filePath
-Event::Endpoint::Threat::CleanupFailed \'(.*?)\' detection_identity_name filePath
-Event::Endpoint::Threat::CommandAndControlDismissed	\'(.*?)\' detection_identity_name filePath
-Event::Endpoint::Threat::HIPSCleanupFailed \'(.*?)\' detection_identity_name filePath
+# Each line is a JSON list.  The symbolic group name for each field becomes the key in the output record.
+# Format: [type, regex_to_split_name_field]
+["Event::Endpoint::Threat::Detected",                   "'(?P<detection_identity_name>.*?)'.+'(?P<filePath>.*?)'"]
+["Event::Endpoint::Threat::CleanedUp",                  "'(?P<detection_identity_name>.*?)'.+'(?P<filePath>.*?)'"]
+["Event::Endpoint::Threat::HIPSDismissed",              "'(?P<detection_identity_name>.*?)'.+'(?P<filePath>.*?)'"]
+["Event::Endpoint::Threat::HIPSDetected",               "'(?P<detection_identity_name>.*?)'.+'(?P<filePath>.*?)'"]
+["Event::Endpoint::Threat::PuaDetected",                "'(?P<detection_identity_name>.*?)'.+'(?P<filePath>.*?)'"]
+["Event::Endpoint::Threat::PuaCleanupFailed",           "'(?P<detection_identity_name>.*?)'.+'(?P<filePath>.*?)'"]
+["Event::Endpoint::Threat::HIPSDetected",               "'(?P<detection_identity_name>.*?)'.+'(?P<filePath>.*?)'"]
+["Event::Endpoint::Threat::HIPSDismissed",              "'(?P<detection_identity_name>.*?)'.+'(?P<filePath>.*?)'"]
+["Event::Endpoint::Threat::CleanupFailed",              "'(?P<detection_identity_name>.*?)'.+'(?P<filePath>.*?)'"]
+["Event::Endpoint::Threat::CommandAndControlDismissed", "'(?P<detection_identity_name>.*?)'.+'(?P<filePath>.*?)'"]
+["Event::Endpoint::Threat::HIPSCleanupFailed",          "'(?P<detection_identity_name>.*?)'.+'(?P<filePath>.*?)'"]
+["Event::Endpoint::DataLossPreventionUserAllowed",      "\u2033(?P<action_type>.+)\u2033.+ Username: (?P<user>.+?)  Rule names: '(?P<rule>.+?)'  User action: (?P<file_open>.+?)  Application Name: (?P<application>.+?)  Data Control action: (?P<action>.+?)  File type: (?P<file_type>.+?)  File size: (?P<file_size>\\d+?)  Source path: (?P<path>.+)$"]
