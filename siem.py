@@ -292,13 +292,20 @@ def write_keyvalue_format(results, siem_logger):
 def update_name_field(data):
     if u'description' in data.keys():
         data[u'name'] = data[u'description']
+        
     if data[u'type'] in NAME_MAPPING:
         prog_regex = NAME_MAPPING[data[u'type']]
         result = prog_regex.search(data[u'name'])
         if not result:
             log("Failed to split name field for event type %s" % data[u'type'])
             return
+        
+        # Make sure record has a name field corresponding to the first field (for the CEF format)
+        gdict = result.groupdict()
+        if gdict.has_key("detection_identity_name"):
+            data[u'name'] = gdict["detection_identity_name"]
             
+        # Update the record with the split out parameters
         data.update(result.groupdict())
 
 
