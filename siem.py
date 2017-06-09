@@ -293,20 +293,13 @@ def update_name_field(data):
     if u'description' in data.keys():
         data[u'name'] = data[u'description']
     if data[u'type'] in NAME_MAPPING:
-        try:
-            # name_list has a compiled regex followed by new field names in which name field needs to be split into.
-            name_list = NAME_MAPPING[data[u'type']]
-            prog_regex = name_list[0]
-            result = prog_regex.findall(data[u'name'])
-            if len(result) == len(name_list) - 1:
-                # update name with the first value for CEF as its name is a required header in CEF
-                data[u'name'] = result[0]
-                for idx, item in enumerate(name_list[1:]):
-                    data[item] = result[idx]
-
-        except:
-            e = sys.exc_info()[0]
-            log("Failed to split name field for event type %s, error %s" % (data[u'type'], e))
+        prog_regex = NAME_MAPPING[data[u'type']]
+        result = prog_regex.search(data[u'name'])
+        if not result:
+            log("Failed to split name field for event type %s" % data[u'type'])
+            return
+            
+        data.update(result.groupdict())
 
 
 def write_cef_format(results, siem_logger):
@@ -430,10 +423,8 @@ def read_name_mapping_file(app_path):
             if line.startswith('#') or line == "\n":
                 pass
             else:
-                words = line.split()
-                name_list = list(words[2:])
-                name_list.insert(0, re.compile(words[1]))
-                name_mapping[words[0]] = name_list
+                event, regex = json.loads(line.strip())
+                name_mapping[event] = re.compile(regex)
     return name_mapping
 
 
