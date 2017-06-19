@@ -22,7 +22,7 @@ You can view API Swagger Specification by accessing API Access URL from the acce
 ### Installation ###
 
 Download and extract from the following link: https://github.com/sophos/Sophos-Central-SIEM-Integration/archive/master.zip
-The script requires Python 2.7.9+ to run. Its not supported on Python 3.x.
+The script requires Python 2.7.9+ to run.
 
 ### Configuration ###
 
