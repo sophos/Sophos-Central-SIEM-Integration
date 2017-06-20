@@ -49,7 +49,7 @@ TYPE_HANDLERS = {
 
 def update_fields(log, data):
     """
-        Split 'name' field into multiple fields based on regex and field names specified in HANDLER_MAPPING
+        Split 'name' field into multiple fields based on regex and field names specified in TYPE_HANDLERS
         Original 'name' field is replaced with the detection_identity_name field, if returned by regex.
     """
 
