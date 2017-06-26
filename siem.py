@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright 2016 Sophos Limited
+# Copyright 2017 Sophos Limited
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in
 # compliance with the License.
@@ -12,16 +12,19 @@
 # License.
 #
 import sys
-req_version = (2, 7, 9)
-cur_version = sys.version_info
-if cur_version >= (3, 0):
-    sys.stderr.write("Python 3.x is not supported. %s")
-    sys.exit(1)
-elif cur_version < req_version:
-    sys.stderr.write("Python 2.7.9+ is supported.")
-    sys.exit(1)
 import calendar
-import ConfigParser
+
+
+try:
+    # Python 2
+    import urllib2 as urlrequest
+    import urllib2 as urlerror
+except ImportError:
+    # Python 3
+    import urllib.request as urlrequest
+    import urllib.error as urlerror
+
+
 import datetime
 import json
 import logging
@@ -31,37 +34,22 @@ import pickle
 import re
 import socket
 import time
-import urllib2
+
 from optparse import OptionParser
 from random import randint
+import name_mapping
+import config
 
-try:
-    import syslog
 
-    SYSLOG_FACILITY = {'auth': syslog.LOG_AUTH,
-                       'cron': syslog.LOG_CRON,
-                       'daemon': syslog.LOG_DAEMON,
-                       'kern': syslog.LOG_KERN,
-                       'lpr': syslog.LOG_LPR,
-                       'mail': syslog.LOG_MAIL,
-                       'news': syslog.LOG_NEWS,
-                       'syslog': syslog.LOG_SYSLOG,
-                       'user': syslog.LOG_USER,
-                       'uucp': syslog.LOG_UUCP,
-                       'local0': syslog.LOG_LOCAL0,
-                       'local1': syslog.LOG_LOCAL1,
-                       'local2': syslog.LOG_LOCAL2,
-                       'local3': syslog.LOG_LOCAL3,
-                       'local4': syslog.LOG_LOCAL4,
-                       'local5': syslog.LOG_LOCAL5,
-                       'local6': syslog.LOG_LOCAL6,
-                       'local7': syslog.LOG_LOCAL7}
 
-    SYSLOG_SOCKTYPE = {'udp': socket.SOCK_DGRAM,
-                       'tcp': socket.SOCK_STREAM}
+SYSLOG_FACILITY = {}
+for facility in ['auth','cron','daemon','kern','lpr','mail','news','syslog','user','uucp','local0','local1','local2','local3','local4','local5','local6','local7']:
+    SYSLOG_FACILITY[facility] = getattr(logging.handlers.SysLogHandler, "LOG_%s" % facility.upper())
 
-except ImportError:
-    syslog = None
+
+SYSLOG_SOCKTYPE = {'udp': socket.SOCK_DGRAM,
+                   'tcp': socket.SOCK_STREAM
+                   }
 
 
 VERSION = '1.0.0'
@@ -79,19 +67,15 @@ SEVERITY_MAP = {'none': 0,
                 'high': 8,
                 'very_high': 10}
 
-NOISY_EVENTTYPES = ['Event::Endpoint::NonCompliant',
-                    'Event::Endpoint::Compliant',
-                    'Event::Endpoint::Device::AlertedOnly',
-                    'Event::Endpoint::UpdateFailure',
-                    'Event::Endpoint::SavScanComplete',
-                    'Event::Endpoint::Application::Allowed',
-                    'Event::Endpoint::UpdateSuccess',
-                    'Event::Endpoint::WebControlViolation',
-                    'Event::Endpoint::WebFilteringBlocked']
 
-ENDPOINT_MAP = {'event': ['/siem/v1/events'],
-                'alert': ['/siem/v1/alerts'],
-                'all': ['/siem/v1/events', '/siem/v1/alerts']}
+NOISY_EVENTTYPES = [k for k,v in name_mapping.TYPE_HANDLERS.items() if not v]
+
+EVENTS_V1 = '/siem/v1/events'
+ALERTS_V1 = '/siem/v1/alerts'
+
+ENDPOINT_MAP = {'event': [EVENTS_V1],
+                'alert': [ALERTS_V1],
+                'all': [EVENTS_V1, ALERTS_V1]}
 
 CEF_CONFIG = {'cef.version': '0', 'cef.device_vendor': 'sophos',
               'cef.device_product': 'sophos central', 'cef.device_version': 1.0}
@@ -101,8 +85,29 @@ CEF_FORMAT = ('CEF:%(version)s|%(device_vendor)s|%(device_product)s|'
               '%(device_version)s|%(device_event_class_id)s|%(name)s|%(severity)s|')
 
 
+CEF_MAPPING = {
+    # This is used for mapping CEF header prefix and extension to json returned by server
+    # CEF header prefix to json mapping
+    # Format
+    # CEF_header_prefix: JSON_key
+    "device_event_class_id": "type",
+    "name": "name",
+    "severity" :"severity",
+    
+    # json to CEF extension mapping
+    # Format
+    # JSON_key: CEF_extension
+    "source": "suser",
+    "when": "end",
+    "user_id": "duid",
+    "created_at": "rt",
+    "full_file_path": "filePath",
+    "location": "dhost",
+}
+
+
 def main():
-    global NOISY_EVENTTYPES, LIGHT, DEBUG, CEF_MAPPING, NAME_MAPPING, QUIET
+    global LIGHT, DEBUG, QUIET
 
     if 'SOPHOS_SIEM_HOME' in os.environ:
         app_path = os.environ['SOPHOS_SIEM_HOME']
@@ -144,36 +149,16 @@ def main():
         QUIET = True
 
     # Read config file
-    config = ConfigParser.ConfigParser()
-    config.read(options.config)
+    cfg = config.Config(options.config)
+    token = config.Token(cfg.token_info)
+    
+    log("Config loaded, retrieving results for '%s'" % token.api_key)
+    log("Config retrieving results for '%s'" % token.authorization)
 
-    try:
-        token_info = config.get('login', 'token_info')
-        token_list = token_info.split(',')
-        url = token_list[0].split(': ')[1]
-        api_key = token_list[1].strip()
-        authorization = token_list[2].strip()
-        log("Config loaded, retrieving results for '%s'" % api_key)
-        log("Config retrieving results for '%s'" % authorization)
-    except:
-        e = sys.exc_info()[0]
-        log("Failed to parse token_info in config file, %s" % e)
-        sys.exit(1)
-
-    if config.get('login', 'endpoint') in ENDPOINT_MAP:
-        tuple_endpoint = ENDPOINT_MAP[config.get('login', 'endpoint')]
+    if cfg.endpoint in ENDPOINT_MAP:
+        tuple_endpoint = ENDPOINT_MAP[cfg.endpoint]
     else:
         tuple_endpoint = ENDPOINT_MAP[DEFAULT_ENDPOINT]
-
-    log_format = config.get('login', 'format')
-    filename = config.get('login', 'filename')
-    if filename == 'syslog':
-        if syslog is None:
-            log('syslog is not supported on this platform')
-            sys.exit(1)
-
-    CEF_MAPPING = read_cef_mapping_file(app_path)
-    NAME_MAPPING = read_name_mapping_file(app_path)
 
     state_dir = os.path.join(app_path, 'state')
     log_dir = os.path.join(app_path, 'log')
@@ -185,31 +170,27 @@ def main():
 
     if options.debug:
         DEBUG = True
-        handler = urllib2.HTTPSHandler(debuglevel=1)
+        handler = urlrequest.HTTPSHandler(debuglevel=1)
     else:
-        handler = urllib2.HTTPSHandler()
-    opener = urllib2.build_opener(handler)
+        handler = urlrequest.HTTPSHandler()
+    opener = urlrequest.build_opener(handler)
 
-    creds = {'url': url,
-             'api_key': api_key,
-             'authorization': authorization
-             }
-
-    endpoint_config = {'format': log_format,
-                       'filename': filename,
+    endpoint_config = {'format': cfg.format,
+                       'filename': cfg.filename,
                        'state_dir': state_dir,
                        'log_dir': log_dir,
                        'since': options.since}
-    if filename == 'syslog':
-        endpoint_config['facility'] = (config.get('login', 'facility')).strip()
-        endpoint_config['address'] = config.get('login', 'address')
-        endpoint_config['socktype'] = (config.get('login', 'socktype')).strip()
+
+    if cfg.filename == 'syslog':
+        endpoint_config['facility'] = cfg.facility.strip()
+        endpoint_config['address'] = cfg.address.strip()
+        endpoint_config['socktype'] = cfg.socktype.strip()
 
     for endpoint in tuple_endpoint:
-        process_endpoint(endpoint, opener, endpoint_config, creds)
+        process_endpoint(endpoint, opener, endpoint_config, token)
 
 
-def process_endpoint(endpoint, opener, endpoint_config, creds):
+def process_endpoint(endpoint, opener, endpoint_config, token):
     state_file_name = "siem_lastrun_" + endpoint.rsplit('/', 1)[-1] + ".obj"
     state_file_path = os.path.join(endpoint_config['state_dir'], state_file_name)
     if LIGHT and endpoint == ENDPOINT_MAP['event'][0]:
@@ -257,7 +238,7 @@ def process_endpoint(endpoint, opener, endpoint_config, creds):
             FileHandler(os.path.join(endpoint_config['log_dir'], endpoint_config['filename']), 'a', encoding='utf-8')
     siem_logger.addHandler(logging_handler)
 
-    results = call_endpoint(opener, endpoint, since, cursor, state_file_path, creds)
+    results = call_endpoint(opener, endpoint, since, cursor, state_file_path, token)
 
     if endpoint_config['format'] == 'json':
         write_json_format(results, siem_logger)
@@ -273,7 +254,7 @@ def write_json_format(results, siem_logger):
     for i in results:
         i = remove_null_values(i)
         update_cef_keys(i)
-        update_name_field(i)
+        name_mapping.update_fields(log, i)
         siem_logger.info(json.dumps(i, ensure_ascii=False) + u'\n')
 
 
@@ -281,38 +262,17 @@ def write_keyvalue_format(results, siem_logger):
     for i in results:
         i = remove_null_values(i)
         update_cef_keys(i)
-        update_name_field(i)
+        name_mapping.update_fields(log, i)
         date = i[u'rt']
+        # TODO:  Spaces/quotes/semicolons are not escaped here, does it matter?
         events = list('%s="%s";' % (k, v) for k, v in i.items())
         siem_logger.info(' '.join([date, ] + events) + u'\n')
-
-
-# Split 'name' field into multiple fields based on regex and field names specified in the name_mapping.txt
-# Original 'name' field is replaced with the first value returned by regex used for splitting 'name' field.
-def update_name_field(data):
-    if u'description' in data.keys():
-        data[u'name'] = data[u'description']
-    if data[u'type'] in NAME_MAPPING:
-        try:
-            # name_list has a compiled regex followed by new field names in which name field needs to be split into.
-            name_list = NAME_MAPPING[data[u'type']]
-            prog_regex = name_list[0]
-            result = prog_regex.findall(data[u'name'])
-            if len(result) == len(name_list) - 1:
-                # update name with the first value for CEF as its name is a required header in CEF
-                data[u'name'] = result[0]
-                for idx, item in enumerate(name_list[1:]):
-                    data[item] = result[idx]
-
-        except:
-            e = sys.exc_info()[0]
-            log("Failed to split name field for event type %s, error %s" % (data[u'type'], e))
 
 
 def write_cef_format(results, siem_logger):
     for i in results:
         i = remove_null_values(i)
-        update_name_field(i)
+        name_mapping.update_fields(log, i)
         siem_logger.info(format_cef(flatten_json(i)) + u'\n')
 
 
@@ -331,12 +291,12 @@ def create_log_and_state_dir(state_dir, log_dir):
             sys.exit(1)
 
 
-def call_endpoint(opener, endpoint, since, cursor, state_file_path, creds):
+def call_endpoint(opener, endpoint, since, cursor, state_file_path, token):
     default_headers = {'Content-Type': 'application/json; charset=utf-8',
                        'Accept': 'application/json',
                        'X-Locale': 'en',
-                       'Authorization': creds['authorization'].split(":")[1],
-                       'x-api-key': creds['api_key'].split(":")[1]}
+                       'Authorization': token.authorization,
+                       'x-api-key': token.api_key}
 
     params = {
         'limit': 1000
@@ -354,9 +314,9 @@ def call_endpoint(opener, endpoint, since, cursor, state_file_path, creds):
             args = '&'.join(['%s=%s' % (k, v) for k, v in params.items()]+[types, ])
         else:
             args = '&'.join(['%s=%s' % (k, v) for k, v in params.items()])
-        events_request_url = '%s%s?%s' % (creds['url'], endpoint, args)
+        events_request_url = '%s%s?%s' % (token.url, endpoint, args)
         log("URL: %s" % events_request_url)
-        events_request = urllib2.Request(events_request_url, None, default_headers)
+        events_request = urlrequest.Request(events_request_url, None, default_headers)
 
         for k, v in default_headers.items():
             events_request.add_header(k, v)
@@ -365,6 +325,7 @@ def call_endpoint(opener, endpoint, since, cursor, state_file_path, creds):
         if DEBUG:
             log("RESPONSE: %s" % events_response)
         events = json.loads(events_response)
+        
 
         # events looks like this
         # {
@@ -411,32 +372,6 @@ def log(s):
         sys.stderr.write('%s\n' % s)
 
 
-def read_cef_mapping_file(app_path):
-    cef_mapping = {}
-    with open(os.path.join(app_path, "siem_cef_mapping.txt")) as f:
-        for line in f:
-            if line.startswith('#') or line == "\n":
-                pass
-            else:
-                (key, val) = line.split()
-                cef_mapping[key] = val
-    return cef_mapping
-
-
-def read_name_mapping_file(app_path):
-    name_mapping = {}
-    with open(os.path.join(app_path, "name_mapping.txt")) as f:
-        for line in f:
-            if line.startswith('#') or line == "\n":
-                pass
-            else:
-                words = line.split()
-                name_list = list(words[2:])
-                name_list.insert(0, re.compile(words[1]))
-                name_mapping[words[0]] = name_list
-    return name_mapping
-
-
 def jitter():
     time.sleep(randint(0, 10))
 
@@ -445,7 +380,7 @@ def request_url(opener, request):
     for i in [1, 2, 3]:  # Some ops we simply retry
         try:
             response = opener.open(request)
-        except urllib2.HTTPError as e:
+        except urlerror.HTTPError as e:
             if e.code in (503, 504, 403, 429):
                 log('Error "%s" (code %s) on attempt #%s of 3, retrying' % (e, e.code, i))
                 if i < 3:
