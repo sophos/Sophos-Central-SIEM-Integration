@@ -205,7 +205,7 @@ def process_endpoint(endpoint, opener, endpoint_config, token):
         since = endpoint_config['since']
     else:
         try:  # Run since last run (retrieve from state_file)
-            with open(state_file_path, 'r') as f:
+            with open(state_file_path, 'rb') as f:
                 cursor = pickle.load(f)
         except IOError:  # Default to current time
             since = int(calendar.timegm(((datetime.datetime.utcnow() - datetime.timedelta(hours=12)).timetuple())))
