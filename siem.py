@@ -327,7 +327,7 @@ def call_endpoint(opener, endpoint, since, cursor, state_file_path, token):
         events_response = request_url(opener, events_request)
         if DEBUG:
             log("RESPONSE: %s" % events_response)
-        events = json.loads(events_response)
+        events = json.loads(events_response.decode())
 
 
         # events looks like this
