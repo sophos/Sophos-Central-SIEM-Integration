@@ -205,7 +205,7 @@ def process_endpoint(endpoint, opener, endpoint_config, token):
         since = endpoint_config['since']
     else:
         try:  # Run since last run (retrieve from state_file)
-            with open(state_file_path, 'r') as f:
+            with open(state_file_path, 'rb') as f:
                 cursor = pickle.load(f)
         except IOError:  # Default to current time
             since = int(calendar.timegm(((datetime.datetime.utcnow() - datetime.timedelta(hours=12)).timetuple())))
@@ -351,7 +351,7 @@ def store_state(next_cursor, state_file_path):
     # Store cursor
     log("Next run will retrieve results using cursor %s\n" % next_cursor)
     with open(state_file_path, 'wb') as f:
-        pickle.dump(next_cursor, f)
+        pickle.dump(next_cursor, f, protocol=2)
 
 
 # Flattening JSON objects in Python
