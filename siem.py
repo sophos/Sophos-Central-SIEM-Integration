@@ -93,7 +93,7 @@ CEF_MAPPING = {
     "device_event_class_id": "type",
     "name": "name",
     "severity" :"severity",
-
+    
     # json to CEF extension mapping
     # Format
     # JSON_key: CEF_extension
@@ -151,7 +151,7 @@ def main():
     # Read config file
     cfg = config.Config(options.config)
     token = config.Token(cfg.token_info)
-
+    
     log("Config loaded, retrieving results for '%s'" % token.api_key)
     log("Config retrieving results for '%s'" % token.authorization)
 
@@ -205,7 +205,7 @@ def process_endpoint(endpoint, opener, endpoint_config, token):
         since = endpoint_config['since']
     else:
         try:  # Run since last run (retrieve from state_file)
-            with open(state_file_path, 'r') as f:
+            with open(state_file_path, 'rb') as f:
                 cursor = pickle.load(f)
         except IOError:  # Default to current time
             since = int(calendar.timegm(((datetime.datetime.utcnow() - datetime.timedelta(hours=12)).timetuple())))
@@ -216,7 +216,28 @@ def process_endpoint(endpoint, opener, endpoint_config, token):
     else:
         log('Retrieving results starting cursor: %s' % cursor)
 
-    siem_logger = get_logger(endpoint_config)
+    siem_logger = logging.getLogger('SIEM')
+    logging.basicConfig(format='%(message)s')
+    siem_logger.setLevel(logging.INFO)
+    siem_logger.propagate = False
+    if endpoint_config['filename'] == 'syslog':
+        facility = SYSLOG_FACILITY[endpoint_config['facility']]
+        address = endpoint_config['address']
+        if ':' in address:
+            result = address.split(':')
+            host = result[0]
+            port = result[1]
+            address = (host, int(port))
+
+        socktype = SYSLOG_SOCKTYPE[endpoint_config['socktype']]
+        logging_handler = logging.handlers.SysLogHandler(address, facility, socktype)
+    elif endpoint_config['filename'] == 'stdout':
+        logging_handler = logging.StreamHandler(sys.stdout)
+    else:
+        logging_handler = logging.\
+            FileHandler(os.path.join(endpoint_config['log_dir'], endpoint_config['filename']), 'a', encoding='utf-8')
+    siem_logger.addHandler(logging_handler)
+
     results = call_endpoint(opener, endpoint, since, cursor, state_file_path, token)
 
     if endpoint_config['format'] == 'json':
@@ -228,30 +249,6 @@ def process_endpoint(endpoint, opener, endpoint_config, token):
     else:
         write_json_format(results, siem_logger)
 
-def get_logger(endpoint_config):
-    siem_logger = logging.getLogger('SIEM')
-    if not len(siem_logger.handlers):
-        logging.basicConfig(format='%(message)s')
-        siem_logger.setLevel(logging.INFO)
-        siem_logger.propagate = False
-        if endpoint_config['filename'] == 'syslog':
-            facility = SYSLOG_FACILITY[endpoint_config['facility']]
-            address = endpoint_config['address']
-            if ':' in address:
-                result = address.split(':')
-                host = result[0]
-                port = result[1]
-                address = (host, int(port))
-
-            socktype = SYSLOG_SOCKTYPE[endpoint_config['socktype']]
-            logging_handler = logging.handlers.SysLogHandler(address, facility, socktype)
-        elif endpoint_config['filename'] == 'stdout':
-            logging_handler = logging.StreamHandler(sys.stdout)
-        else:
-            logging_handler = logging.\
-                FileHandler(os.path.join(endpoint_config['log_dir'], endpoint_config['filename']), 'a', encoding='utf-8')
-        siem_logger.addHandler(logging_handler)
-    return siem_logger
 
 def write_json_format(results, siem_logger):
     for i in results:
@@ -328,7 +325,7 @@ def call_endpoint(opener, endpoint, since, cursor, state_file_path, token):
         if DEBUG:
             log("RESPONSE: %s" % events_response)
         events = json.loads(events_response)
-
+        
 
         # events looks like this
         # {
@@ -351,7 +348,7 @@ def store_state(next_cursor, state_file_path):
     # Store cursor
     log("Next run will retrieve results using cursor %s\n" % next_cursor)
     with open(state_file_path, 'wb') as f:
-        pickle.dump(next_cursor, f)
+        pickle.dump(next_cursor, f, protocol=2)
 
 
 # Flattening JSON objects in Python
