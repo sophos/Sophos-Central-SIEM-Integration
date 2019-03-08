@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright 2017 Sophos Limited
+# Copyright 2019 Sophos Limited
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in
 # compliance with the License.
@@ -12,6 +12,10 @@
 # License.
 #
 
+import unittest
+import shutil
+import tempfile
+import os
 import re
 try:
     import ConfigParser
@@ -20,9 +24,9 @@ except ImportError:
 
 
 class Config:
-    "Class providing config values"
+    """Class providing config values"""
     def __init__(self, path):
-        "Open the config file"
+        """Open the config file"""
         self.config = ConfigParser.ConfigParser()
         self.config.read(path)
         
@@ -32,8 +36,9 @@ class Config:
 
 class Token:
     def __init__(self, token_txt):
-        "Initialize with the token text"
-        rex = re.compile(r"url\: (?P<url>https\://.+), x-api-key\: (?P<api_key>.+), Authorization\: (?P<authorization>.+)$")
+        """Initialize with the token text"""
+        rex_txt = r"url\: (?P<url>https\://.+), x-api-key\: (?P<api_key>.+), Authorization\: (?P<authorization>.+)$"
+        rex = re.compile(rex_txt)
         m = rex.search(token_txt)
         self.url = m.group("url")
         self.api_key = m.group("api_key")
@@ -46,11 +51,8 @@ class Token:
 #
 
 
-import unittest, copy, shutil, tempfile, os
-
-
 class TestConfig(unittest.TestCase):
-    "Test Config file items are exposed as attributes on config object"
+    """Test Config file items are exposed as attributes on config object"""
 
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp(prefix="config_test", dir=".")
@@ -68,7 +70,7 @@ class TestConfig(unittest.TestCase):
 
 
 class TestToken(unittest.TestCase):
-    "Test the token gets parsed"
+    """Test the token gets parsed"""
     def testParse(self):
         txt = "  url: https://anywhere.com/api, x-api-key: random, Authorization: Basic KJNKLJNjklNLKHB= "
         t = Token(txt)
@@ -79,4 +81,3 @@ class TestToken(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
