@@ -65,8 +65,6 @@ def update_fields(log, data):
         result = prog_regex.search(data[u'name'])
         if not result:
             log("Failed to split name field for event type %r" % data[u'type'])
-            log("Original data follows:")
-            log(data["name"])
             return
 
         # Make sure record has a name field corresponding to the first field (for the CEF format)
