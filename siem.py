@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright 2017 Sophos Limited
+# Copyright 2019 Sophos Limited
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in
 # compliance with the License.
@@ -41,10 +41,17 @@ import name_mapping
 import config
 
 
+def get_syslog_facilities():
+    """Create a mapping between our names and the python syslog defines"""
+    out = {}
+    possible = "auth cron daemon kern lpr mail news syslog user uucp " \
+               "local0 local1 local2 local3 local4 local5 local6 local7".split()
+    for facility in possible:
+        out[facility] = getattr(logging.handlers.SysLogHandler, "LOG_%s" % facility.upper())
+    return out
 
-SYSLOG_FACILITY = {}
-for facility in ['auth','cron','daemon','kern','lpr','mail','news','syslog','user','uucp','local0','local1','local2','local3','local4','local5','local6','local7']:
-    SYSLOG_FACILITY[facility] = getattr(logging.handlers.SysLogHandler, "LOG_%s" % facility.upper())
+
+SYSLOG_FACILITY = get_syslog_facilities()
 
 
 SYSLOG_SOCKTYPE = {'udp': socket.SOCK_DGRAM,
@@ -68,7 +75,11 @@ SEVERITY_MAP = {'none': 0,
                 'very_high': 10}
 
 
-NOISY_EVENTTYPES = [k for k,v in name_mapping.TYPE_HANDLERS.items() if not v]
+def get_noisy_event_types():
+    return [k for k, v in name_mapping.TYPE_HANDLERS.items() if not v]
+
+
+NOISY_EVENTTYPES = get_noisy_event_types()
 
 EVENTS_V1 = '/siem/v1/events'
 ALERTS_V1 = '/siem/v1/alerts'
@@ -92,7 +103,7 @@ CEF_MAPPING = {
     # CEF_header_prefix: JSON_key
     "device_event_class_id": "type",
     "name": "name",
-    "severity" :"severity",
+    "severity": "severity",
     
     # json to CEF extension mapping
     # Format
@@ -325,7 +336,6 @@ def call_endpoint(opener, endpoint, since, cursor, state_file_path, token):
         if DEBUG:
             log("RESPONSE: %s" % events_response)
         events = json.loads(events_response)
-        
 
         # events looks like this
         # {
@@ -468,6 +478,7 @@ def format_cef(data):
 
 def remove_null_values(data):
     return {k: v for k, v in data.items() if v is not None}
+
 
 if __name__ == "__main__":
     main()

@@ -1,0 +1,6 @@
+*.pyc
+*.zip
+*~
+/.idea/
+/log/
+/state/
