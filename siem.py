@@ -116,6 +116,12 @@ CEF_MAPPING = {
     "location": "dhost",
 }
 
+# Initialize the SIEM_LOGGER
+SIEM_LOGGER = logging.getLogger('SIEM')
+SIEM_LOGGER.setLevel(logging.INFO)
+SIEM_LOGGER.propagate = False
+logging.basicConfig(format='%(message)s')
+
 
 def main():
     global LIGHT, DEBUG, QUIET
@@ -197,6 +203,8 @@ def main():
         endpoint_config['address'] = cfg.address.strip()
         endpoint_config['socktype'] = cfg.socktype.strip()
 
+    SIEM_LOGGER.addHandler(create_siem_log_handler(endpoint_config))
+
     for endpoint in tuple_endpoint:
         process_endpoint(endpoint, opener, endpoint_config, token)
 
@@ -227,10 +235,19 @@ def process_endpoint(endpoint, opener, endpoint_config, token):
     else:
         log('Retrieving results starting cursor: %s' % cursor)
 
-    siem_logger = logging.getLogger('SIEM')
-    logging.basicConfig(format='%(message)s')
-    siem_logger.setLevel(logging.INFO)
-    siem_logger.propagate = False
+    results = call_endpoint(opener, endpoint, since, cursor, state_file_path, token)
+
+    if endpoint_config['format'] == 'json':
+        write_json_format(results)
+    elif endpoint_config['format'] == 'keyvalue':
+        write_keyvalue_format(results)
+    elif endpoint_config['format'] == 'cef':
+        write_cef_format(results)
+    else:
+        write_json_format(results)
+
+
+def create_siem_log_handler(endpoint_config):
     if endpoint_config['filename'] == 'syslog':
         facility = SYSLOG_FACILITY[endpoint_config['facility']]
         address = endpoint_config['address']
@@ -245,31 +262,20 @@ def process_endpoint(endpoint, opener, endpoint_config, token):
     elif endpoint_config['filename'] == 'stdout':
         logging_handler = logging.StreamHandler(sys.stdout)
     else:
-        logging_handler = logging.\
+        logging_handler = logging. \
             FileHandler(os.path.join(endpoint_config['log_dir'], endpoint_config['filename']), 'a', encoding='utf-8')
-    siem_logger.addHandler(logging_handler)
-
-    results = call_endpoint(opener, endpoint, since, cursor, state_file_path, token)
-
-    if endpoint_config['format'] == 'json':
-        write_json_format(results, siem_logger)
-    elif endpoint_config['format'] == 'keyvalue':
-        write_keyvalue_format(results, siem_logger)
-    elif endpoint_config['format'] == 'cef':
-        write_cef_format(results, siem_logger)
-    else:
-        write_json_format(results, siem_logger)
+    return logging_handler
 
 
-def write_json_format(results, siem_logger):
+def write_json_format(results):
     for i in results:
         i = remove_null_values(i)
         update_cef_keys(i)
         name_mapping.update_fields(log, i)
-        siem_logger.info(json.dumps(i, ensure_ascii=False) + u'\n')
+        SIEM_LOGGER.info(json.dumps(i, ensure_ascii=False) + u'\n')
 
 
-def write_keyvalue_format(results, siem_logger):
+def write_keyvalue_format(results):
     for i in results:
         i = remove_null_values(i)
         update_cef_keys(i)
@@ -277,14 +283,14 @@ def write_keyvalue_format(results, siem_logger):
         date = i[u'rt']
         # TODO:  Spaces/quotes/semicolons are not escaped here, does it matter?
         events = list('%s="%s";' % (k, v) for k, v in i.items())
-        siem_logger.info(' '.join([date, ] + events) + u'\n')
+        SIEM_LOGGER.info(' '.join([date, ] + events) + u'\n')
 
 
-def write_cef_format(results, siem_logger):
+def write_cef_format(results):
     for i in results:
         i = remove_null_values(i)
         name_mapping.update_fields(log, i)
-        siem_logger.info(format_cef(flatten_json(i)) + u'\n')
+        SIEM_LOGGER.info(format_cef(flatten_json(i)) + u'\n')
 
 
 def create_log_and_state_dir(state_dir, log_dir):
