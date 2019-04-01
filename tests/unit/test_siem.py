@@ -41,7 +41,7 @@ class CreateSIEMLogHandlerUnitTests(unittest.TestCase):
         }
 
         # Run
-        handler = siem.create_siem_log_handler(endpoint_config)
+        handler = siem.create_output_handler(endpoint_config)
 
         # Verify
         self.assertIsInstance(handler, type(mock.return_value))
@@ -59,7 +59,7 @@ class CreateSIEMLogHandlerUnitTests(unittest.TestCase):
         }
 
         # Run
-        handler = siem.create_siem_log_handler(endpoint_config)
+        handler = siem.create_output_handler(endpoint_config)
 
         # Verify
         self.assertIsInstance(handler, type(mock.return_value))
@@ -74,7 +74,7 @@ class CreateSIEMLogHandlerUnitTests(unittest.TestCase):
         }
 
         # Run
-        handler = siem.create_siem_log_handler(endpoint_config)
+        handler = siem.create_output_handler(endpoint_config)
 
         # Verify
         self.assertIsInstance(handler, type(mock.return_value))
@@ -90,7 +90,7 @@ class CreateSIEMLogHandlerUnitTests(unittest.TestCase):
         }
 
         # Run
-        handler = siem.create_siem_log_handler(endpoint_config)
+        handler = siem.create_output_handler(endpoint_config)
 
         # Verify
         self.assertIsInstance(handler, type(mock.return_value))
@@ -165,7 +165,7 @@ class MainUnitTests(unittest.TestCase):
 
     @patch("siem.create_log_and_state_dir")
     @patch("siem.process_endpoint")
-    @patch("siem.create_siem_log_handler")
+    @patch("siem.create_output_handler")
     @patch("logging.FileHandler")
     @patch("config.Token")
     @patch("config.Config")
@@ -173,7 +173,7 @@ class MainUnitTests(unittest.TestCase):
                          mock_config,
                          mock_token,
                          mock_filehandler,
-                         mock_create_siem_log_handler,
+                         mock_create_output_handler,
                          mock_process_endpoint,
                          mock_create_log_and_state_dir):
         # Setup
@@ -193,14 +193,14 @@ class MainUnitTests(unittest.TestCase):
 
         # Verify
         self.assertEqual(self.LOGGER_MOCK.addHandler.call_count, 1)
-        args, kwargs = mock_create_siem_log_handler.call_args
+        args, kwargs = mock_create_output_handler.call_args
         self.assertEqual(len(args), 1)
         self.assertEqual(len(kwargs), 0)
         self.assertEqual(args[0], fake_endpoint_config)
 
     @patch("siem.create_log_and_state_dir")
     @patch("siem.process_endpoint")
-    @patch("siem.create_siem_log_handler")
+    @patch("siem.create_output_handler")
     @patch("logging.FileHandler")
     @patch("config.Token")
     @patch("config.Config")
@@ -208,7 +208,7 @@ class MainUnitTests(unittest.TestCase):
                                      mock_config,
                                      mock_token,
                                      mock_filehandler,
-                                     mock_create_siem_log_handler,
+                                     mock_create_output_handler,
                                      mock_process_endpoint,
                                      mock_create_log_and_state_dir):
         # Setup
@@ -234,7 +234,7 @@ class MainUnitTests(unittest.TestCase):
 
         # Verify
         self.assertEqual(self.LOGGER_MOCK.addHandler.call_count, 1)
-        args, kwargs = mock_create_siem_log_handler.call_args
+        args, kwargs = mock_create_output_handler.call_args
         self.assertEqual(len(args), 1)
         self.assertEqual(len(kwargs), 0)
         self.assertEqual(args[0], fake_endpoint_config)

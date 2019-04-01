@@ -203,7 +203,7 @@ def main():
         endpoint_config['address'] = cfg.address.strip()
         endpoint_config['socktype'] = cfg.socktype.strip()
 
-    SIEM_LOGGER.addHandler(create_siem_log_handler(endpoint_config))
+    SIEM_LOGGER.addHandler(create_output_handler(endpoint_config))
 
     for endpoint in tuple_endpoint:
         process_endpoint(endpoint, opener, endpoint_config, token)
@@ -247,7 +247,7 @@ def process_endpoint(endpoint, opener, endpoint_config, token):
         write_json_format(results)
 
 
-def create_siem_log_handler(endpoint_config):
+def create_output_handler(endpoint_config):
     if endpoint_config['filename'] == 'syslog':
         facility = SYSLOG_FACILITY[endpoint_config['facility']]
         address = endpoint_config['address']
