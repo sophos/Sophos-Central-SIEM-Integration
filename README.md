@@ -28,6 +28,7 @@ The script requires Python 2.7.9+ to run.
 #### Releases ####
 
 ##### [v1.1.0](https://github.com/sophos/Sophos-Central-SIEM-Integration/archive/v1.1.0.zip) #####
+* CSA-2918: Adding text identifier to distinguish between an 'Event' and 'Alert'
 * CSA-2917: Fixing issue with double alert reporting
 
 ##### [v1.0.0](https://github.com/sophos/Sophos-Central-SIEM-Integration/archive/v1.0.0.zip) #####
