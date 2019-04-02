@@ -4,3 +4,7 @@
 /.idea/
 /log/
 /state/
+*.iml
+venv/
+new_py*/
+orig_py*/
