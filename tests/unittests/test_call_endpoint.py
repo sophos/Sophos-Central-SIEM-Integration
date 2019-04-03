@@ -36,17 +36,13 @@ class CallEndPointTest(unittest.TestCase):
                                   mock_config_token
                                   ):
         # Setup
+        # Sample event
         mock_event_response = {
             "has_more": False,
             "next_cursor": "VjJfQ1VSU09SfDIwMTktMDQtMDFUMTg6MjU6NDEuNjA2Wg==",
             "items": [
                 {
                     "when": "2019-04-01T15:11:09.759Z",
-                    "appSha256": None,
-                    "appCerts": None,
-                    "threat": None,
-                    "user_id": None,
-                    "core_remedy_items": None,
                     "id": "cbaff14f-a36b-46bd-8e83-6017ad79cdef",
                     "customer_id": "816f36ee-dd2e-4ccd-bb12-cea766c28ade",
                     "severity": "low",
@@ -65,11 +61,6 @@ class CallEndPointTest(unittest.TestCase):
                 },
                 {
                     "when": "2019-04-01T15:11:41.000Z",
-                    "appSha256": None,
-                    "appCerts": None,
-                    "threat": "Eicar-AV-Test",
-                    "user_id": None,
-                    "core_remedy_items": None,
                     "id": "5bc48f19-3905-4f72-9f79-cd381c8e92ce",
                     "customer_id": "816f36ee-dd2e-4ccd-bb12-cea766c28ade",
                     "severity": "medium",
@@ -109,12 +100,12 @@ class CallEndPointTest(unittest.TestCase):
         if os.path.exists('siem_lastrun_events.obj'):
             os.remove('siem_lastrun_events.obj')
 
-
     @mock.patch('siem.config.Token')
     def test_data_stream_in_alert(self,
                                   mock_config_token
                                   ):
         # Setup
+        # Sample alert
         mock_alert_response = {
             "has_more": False,
             "next_cursor": "MHwyMDE5LTA0LTAxVDIxOjI2OjQ5LjIxOVo=",
