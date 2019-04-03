@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright 2019 Sophos Limited
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in
@@ -12,18 +10,17 @@
 # License.
 #
 
+"""
+ Unit tests for Sophos SIEM.
+ Requirements
+  - Python 2.7 (ActivePython recommended on Windows)
+  - Python 3.5 (ActivePython recommended on Windows)
+
+"""
+
 import os
 import unittest
 import siem
-
-try:
-    # Python 2
-    import urllib2 as urlrequest
-    import urllib2 as urlerror
-except ImportError:
-    # Python 3
-    import urllib.request as urlrequest
-    import urllib.error as urlerror
 
 import mock
 import json
@@ -32,8 +29,10 @@ import json
 class CallEndPointTest(unittest.TestCase):
 
     @mock.patch('siem.config.Token')
+    @mock.patch('siem.store_state')
     def test_data_stream_in_event(self,
-                                  mock_config_token
+                                  mock_config_token,
+                                  mock_store_state
                                   ):
         # Setup
         # Sample event
@@ -86,7 +85,7 @@ class CallEndPointTest(unittest.TestCase):
             with mock.patch('siem.request_url') as mock_request_url:
                 mock_request_url.return_value = json.dumps(mock_event_response)
                 for e in siem.call_endpoint(mock.Mock(), '/siem/v1/events', False,
-                           False, 'siem_lastrun_events.obj', mock_config_token):
+                           False, 'fake_state_file', mock_config_token):
                     events.append(e)
 
         except Exception as ex:
@@ -96,13 +95,11 @@ class CallEndPointTest(unittest.TestCase):
         self.assertEqual(len(events), 2)
         self.assertEqual(events[0]["datastream"], siem.EVENT_TYPE)
 
-        # TearDown
-        if os.path.exists('siem_lastrun_events.obj'):
-            os.remove('siem_lastrun_events.obj')
-
     @mock.patch('siem.config.Token')
+    @mock.patch('siem.store_state')
     def test_data_stream_in_alert(self,
-                                  mock_config_token
+                                  mock_config_token,
+                                  mock_store_state
                                   ):
         # Setup
         # Sample alert
@@ -204,7 +201,7 @@ class CallEndPointTest(unittest.TestCase):
             with mock.patch('siem.request_url') as mock_request_url:
                 mock_request_url.return_value = json.dumps(mock_alert_response)
                 for a in siem.call_endpoint(mock.Mock(), siem.ALERTS_V1, False,
-                                            False, 'siem_lastrun_alerts.obj', mock_config_token):
+                                            False, 'fake_state_file', mock_config_token):
                     alerts.append(a)
 
         except Exception as ex:
@@ -217,8 +214,3 @@ class CallEndPointTest(unittest.TestCase):
         # TearDown
         if os.path.exists('siem_lastrun_alerts.obj'):
             os.remove('siem_lastrun_alerts.obj')
-
-
-# Run this file directly to run just the unit tests herein.
-if __name__ == "__main__":
-    unittest.main()
