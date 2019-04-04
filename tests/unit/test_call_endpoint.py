@@ -28,8 +28,8 @@ import json
 
 class CallEndPointTest(unittest.TestCase):
 
-    @mock.patch('siem.config.Token')
     @mock.patch('siem.store_state')
+    @mock.patch('siem.config.Token')
     def test_data_stream_in_event(self,
                                   mock_cf_token,
                                   mock_store_state
@@ -97,8 +97,8 @@ class CallEndPointTest(unittest.TestCase):
         self.assertEqual(len(events), 2)
         self.assertEqual(events[0]["datastream"], siem.EVENT_TYPE)
 
-    @mock.patch('siem.config.Token')
     @mock.patch('siem.store_state')
+    @mock.patch('siem.config.Token')
     def test_data_stream_in_alert(self,
                                   mock_cf_token,
                                   mock_store_state
