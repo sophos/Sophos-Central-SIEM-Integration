@@ -84,6 +84,9 @@ NOISY_EVENTTYPES = get_noisy_event_types()
 EVENTS_V1 = '/siem/v1/events'
 ALERTS_V1 = '/siem/v1/alerts'
 
+EVENT_TYPE = 'event'
+ALERT_TYPE = 'alert'
+
 ENDPOINT_MAP = {'event': [EVENTS_V1],
                 'alert': [ALERTS_V1],
                 'all': [EVENTS_V1, ALERTS_V1]}
@@ -350,6 +353,7 @@ def call_endpoint(opener, endpoint, since, cursor, state_file_path, token):
         # u'events': {}
         # }
         for e in events['items']:
+            e[u'datastream'] = EVENT_TYPE if(endpoint == EVENTS_V1) else ALERT_TYPE
             yield e
 
         store_state(events['next_cursor'], state_file_path)
