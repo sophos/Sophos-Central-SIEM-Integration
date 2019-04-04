@@ -31,7 +31,7 @@ class CallEndPointTest(unittest.TestCase):
     @mock.patch('siem.config.Token')
     @mock.patch('siem.store_state')
     def test_data_stream_in_event(self,
-                                  mock_config_token,
+                                  mock_cf_token,
                                   mock_store_state
                                   ):
         # Setup
@@ -83,9 +83,11 @@ class CallEndPointTest(unittest.TestCase):
         # Run
         try:
             with mock.patch('siem.request_url') as mock_request_url:
+                # mocking the request that retrieves events from SOA
                 mock_request_url.return_value = json.dumps(mock_event_response)
-                for e in siem.call_endpoint(mock.Mock(), '/siem/v1/events', False,
-                           False, 'fake_state_file', mock_config_token):
+                # call_endpoint uses yield method of python and returns each alert to the caller for
+                # additional processing. Here its just appended to a list
+                for e in siem.call_endpoint(mock.Mock(), siem.EVENT_TYPE, False, False, 'fake_state_file', mock_cf_token):
                     events.append(e)
 
         except Exception as ex:
@@ -98,7 +100,7 @@ class CallEndPointTest(unittest.TestCase):
     @mock.patch('siem.config.Token')
     @mock.patch('siem.store_state')
     def test_data_stream_in_alert(self,
-                                  mock_config_token,
+                                  mock_cf_token,
                                   mock_store_state
                                   ):
         # Setup
@@ -199,9 +201,11 @@ class CallEndPointTest(unittest.TestCase):
         # Run
         try:
             with mock.patch('siem.request_url') as mock_request_url:
+                # mocking the request that retrieves alerts from SOA
                 mock_request_url.return_value = json.dumps(mock_alert_response)
-                for a in siem.call_endpoint(mock.Mock(), siem.ALERTS_V1, False,
-                                            False, 'fake_state_file', mock_config_token):
+                # call_endpoint uses yield method of python and returns each alert to the caller for
+                # additional processing. Here its just appended to a list
+                for a in siem.call_endpoint(mock.Mock(), siem.ALERTS_V1, False, False, 'fake_state_file', mock_cf_token):
                     alerts.append(a)
 
         except Exception as ex:
@@ -211,6 +215,3 @@ class CallEndPointTest(unittest.TestCase):
         self.assertEqual(len(alerts), 3)
         self.assertEqual(alerts[0]["datastream"], siem.ALERT_TYPE)
 
-        # TearDown
-        if os.path.exists('siem_lastrun_alerts.obj'):
-            os.remove('siem_lastrun_alerts.obj')
