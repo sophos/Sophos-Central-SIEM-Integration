@@ -87,7 +87,7 @@ class CallEndPointTest(unittest.TestCase):
                 mock_request_url.return_value = json.dumps(mock_event_response)
                 # call_endpoint uses yield method of python and returns each alert to the caller for
                 # additional processing. Here its just appended to a list
-                for e in siem.call_endpoint(mock.Mock(), siem.EVENT_TYPE, False, False, 'fake_state_file', mock_cf_token):
+                for e in siem.call_endpoint(mock.Mock(), siem.EVENTS_V1, False, False, 'fake_state_file', mock_cf_token):
                     events.append(e)
 
         except Exception as ex:
