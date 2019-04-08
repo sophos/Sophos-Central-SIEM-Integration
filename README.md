@@ -23,6 +23,7 @@ You can view API Swagger Specification by accessing API Access URL from the acce
 
 Download and extract from [here](https://github.com/sophos/Sophos-Central-SIEM-Integration/archive/v1.1.0.zip) for the latest release.
 For older version, please consult the Releases section below.
+For changes to the API, please consult the API Updates section below.
 The script requires Python 2.7.9+ to run.
 
 #### Releases ####
@@ -35,6 +36,16 @@ See [changelog](CHANGELOG.md) for full details.
 
 ##### [v1.0.0](https://github.com/sophos/Sophos-Central-SIEM-Integration/archive/v1.0.0.zip) #####
 * Initial release
+
+#### API Updates ####
+
+The following updates are part of an API update. They will be live for ***all versions of SIEM after their listed release dates.***
+
+See [changelog](CHANGELOG.md) for full details.
+
+##### 2019-04-13 #####
+* Updated conversion logic to ensure matching identifiers between output objects for the following elements:
+-- endpoint_id --	customer_id --	event_service_event_id
 
 ### Configuration ###
 
