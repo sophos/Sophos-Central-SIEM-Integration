@@ -19,10 +19,12 @@ try:
     # Python 2
     import urllib2 as urlrequest
     import urllib2 as urlerror
+    from urllib import urlencode
 except ImportError:
     # Python 3
     import urllib.request as urlrequest
     import urllib.error as urlerror
+    from urllib.parse import urlencode
 
 
 import datetime
@@ -83,6 +85,7 @@ NOISY_EVENTTYPES = get_noisy_event_types()
 
 EVENTS_V1 = '/siem/v1/events'
 ALERTS_V1 = '/siem/v1/alerts'
+OAUTH2_TOKEN_V2 = ''
 
 EVENT_TYPE = 'event'
 ALERT_TYPE = 'alert'
@@ -171,6 +174,11 @@ def main():
     # Read config file
     cfg = config.Config(options.config)
     token = config.Token(cfg.token_info)
+    client = {
+        'client_id': cfg.client_id,
+        'client_secret': cfg.client_secret,
+        'x_tenant_id': cfg.x_tenant_id
+    }
     
     log("Config loaded, retrieving results for '%s'" % token.api_key)
     log("Config retrieving results for '%s'" % token.authorization)
@@ -209,10 +217,10 @@ def main():
     SIEM_LOGGER.addHandler(create_output_handler(endpoint_config))
 
     for endpoint in tuple_endpoint:
-        process_endpoint(endpoint, opener, endpoint_config, token)
+        process_endpoint(endpoint, opener, endpoint_config, token, client)
 
 
-def process_endpoint(endpoint, opener, endpoint_config, token):
+def process_endpoint(endpoint, opener, endpoint_config, token, client):
     state_file_name = "siem_lastrun_" + endpoint.rsplit('/', 1)[-1] + ".obj"
     state_file_path = os.path.join(endpoint_config['state_dir'], state_file_name)
     if LIGHT and endpoint == ENDPOINT_MAP['event'][0]:
@@ -238,7 +246,18 @@ def process_endpoint(endpoint, opener, endpoint_config, token):
     else:
         log('Retrieving results starting cursor: %s' % cursor)
 
-    results = call_endpoint(opener, endpoint, since, cursor, state_file_path, token)
+    access_token = ''
+    if client['client_id'] and client['client_secret']:
+        jwt_token = get_sophos_jwt(client['client_id'], client['client_secret'])
+        log("jwt_token :: %s" % jwt_token)
+        if jwt_token.get('access_token'):
+            access_token = jwt_token.get('access_token')
+        else:
+            log("JWT token not found")
+            return
+
+    client['access_token'] = access_token
+    results = call_endpoint(opener, endpoint, since, cursor, state_file_path, token, client)
 
     if endpoint_config['format'] == 'json':
         write_json_format(results)
@@ -311,8 +330,58 @@ def create_log_and_state_dir(state_dir, log_dir):
             sys.exit(1)
 
 
-def call_endpoint(opener, endpoint, since, cursor, state_file_path, token):
-    default_headers = {'Content-Type': 'application/json; charset=utf-8',
+def get_sophos_jwt(client_id=None, client_secret=None):
+    """Fetch the Sophos JWT access token.
+
+    Get the token by calling Sophos API.
+
+    Arguments:
+        client_id {string} -- sophos' client id (default: {None})
+        client_secret {string} -- sophos' client secret (default: {None})
+
+    Returns:
+        dict -- response containing either of jwt token or error
+    """
+    
+    log("fetching access_token from sophos")
+    body = {
+        "grant_type": "client_credentials",
+        "scope": "token",
+        "client_id": client_id,
+        "client_secret": client_secret,
+    }
+    log("body :: %s" % str(body))
+    
+    try:
+        data = urlencode(body).encode("utf-8")
+        req = urlrequest.Request(OAUTH2_TOKEN_V2, data)
+        response = urlrequest.urlopen(req)
+
+        if response.code == 200:
+            response = json.loads(response.read().decode('utf-8'))
+            log("response :: %s" % str(response))
+            log("jwt :: %s" % response["access_token"])
+        else:
+            log("Error :: %s" % response)
+
+        return response
+    except Exception as e:
+        log("Error :: %s" % e)
+        return { "reason": e.reason }
+
+
+def call_endpoint(opener, endpoint, since, cursor, state_file_path, token, client):
+    if client['access_token'] and client['x_tenant_id']:
+        token_url = OAUTH2_TOKEN_V2
+        default_headers = {'Content-Type': 'application/json; charset=utf-8',
+                       'Accept': 'application/json',
+                       'X-Locale': 'en',
+                       'X-Tenant-ID': client['x_tenant_id'],
+                       'Authorization': 'Basic ' + client['access_token']
+                       }
+    else:
+        token_url =  token.url
+        default_headers = {'Content-Type': 'application/json; charset=utf-8',
                        'Accept': 'application/json',
                        'X-Locale': 'en',
                        'Authorization': token.authorization,
@@ -334,7 +403,7 @@ def call_endpoint(opener, endpoint, since, cursor, state_file_path, token):
             args = '&'.join(['%s=%s' % (k, v) for k, v in params.items()]+[types, ])
         else:
             args = '&'.join(['%s=%s' % (k, v) for k, v in params.items()])
-        events_request_url = '%s%s?%s' % (token.url, endpoint, args)
+        events_request_url = '%s%s?%s' % (token_url, endpoint, args)
         log("URL: %s" % events_request_url)
         events_request = urlrequest.Request(events_request_url, None, default_headers)
 
