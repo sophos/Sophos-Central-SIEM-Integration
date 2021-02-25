@@ -85,7 +85,7 @@ NOISY_EVENTTYPES = get_noisy_event_types()
 
 EVENTS_V1 = '/siem/v1/events'
 ALERTS_V1 = '/siem/v1/alerts'
-OAUTH2_TOKEN_V2 = ''
+OAUTH2_TOKEN_V2 = 'https://id.sophos.com/api/v2/oauth2/token'
 
 EVENT_TYPE = 'event'
 ALERT_TYPE = 'alert'
@@ -377,7 +377,7 @@ def call_endpoint(opener, endpoint, since, cursor, state_file_path, token, clien
                        'Accept': 'application/json',
                        'X-Locale': 'en',
                        'X-Tenant-ID': client['x_tenant_id'],
-                       'Authorization': 'Basic ' + client['access_token']
+                       'Authorization': client['access_token']
                        }
     else:
         token_url =  token.url
