@@ -85,8 +85,8 @@ NOISY_EVENTTYPES = get_noisy_event_types()
 
 EVENTS_V1 = '/siem/v1/events'
 ALERTS_V1 = '/siem/v1/alerts'
-OAUTH2_TOKEN_V2 = 'https://id.sophos.com/api/v2/oauth2/token'
-LEGACY_SIEM_URL = 'https://api.central.sophos.com/gateway'
+OAUTH2_TOKEN_V2 = 'https://dev-id.sophos.com/api/v2/oauth2/token'
+LEGACY_SIEM_URL = ''
 
 EVENT_TYPE = 'event'
 ALERT_TYPE = 'alert'
