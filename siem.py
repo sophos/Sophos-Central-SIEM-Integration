@@ -86,7 +86,6 @@ NOISY_EVENTTYPES = get_noisy_event_types()
 EVENTS_V1 = '/siem/v1/events'
 ALERTS_V1 = '/siem/v1/alerts'
 OAUTH2_TOKEN_V2 = 'https://dev-id.sophos.com/api/v2/oauth2/token'
-LEGACY_SIEM_URL = ''
 
 EVENT_TYPE = 'event'
 ALERT_TYPE = 'alert'
@@ -178,7 +177,8 @@ def main():
     client = {
         'client_id': cfg.client_id,
         'client_secret': cfg.client_secret,
-        'x_tenant_id': cfg.x_tenant_id
+        'x_tenant_id': cfg.x_tenant_id,
+        'url': cfg.url
     }
     
     log("Config loaded, retrieving results for '%s'" % token.api_key)
@@ -373,7 +373,7 @@ def get_sophos_jwt(client_id=None, client_secret=None):
 
 def call_endpoint(opener, endpoint, since, cursor, state_file_path, token, client):
     if client['access_token'] and client['x_tenant_id']:
-        token_url = LEGACY_SIEM_URL
+        token_url = client['url']
         default_headers = {'Content-Type': 'application/json; charset=utf-8',
                        'Accept': 'application/json',
                        'X-Locale': 'en',
