@@ -218,10 +218,10 @@ def main():
     SIEM_LOGGER.addHandler(create_output_handler(endpoint_config))
 
     for endpoint in tuple_endpoint:
-        process_endpoint(endpoint, opener, endpoint_config, token, client)
+        process_endpoint(endpoint, opener, endpoint_config, token, client, cfg.oauth_token_url)
 
 
-def process_endpoint(endpoint, opener, endpoint_config, token, client):
+def process_endpoint(endpoint, opener, endpoint_config, token, client, oauth_token_url):
     state_file_name = "siem_lastrun_" + endpoint.rsplit('/', 1)[-1] + ".obj"
     state_file_path = os.path.join(endpoint_config['state_dir'], state_file_name)
     if LIGHT and endpoint == ENDPOINT_MAP['event'][0]:
@@ -249,7 +249,7 @@ def process_endpoint(endpoint, opener, endpoint_config, token, client):
 
     access_token = ''
     if client['client_id'] and client['client_secret']:
-        jwt_token = get_sophos_jwt(client['client_id'], client['client_secret'])
+        jwt_token = get_sophos_jwt(client['client_id'], client['client_secret'], oauth_token_url)
         log("jwt_token :: %s" % jwt_token)
         if jwt_token.get('access_token'):
             access_token = jwt_token.get('access_token')
@@ -331,7 +331,7 @@ def create_log_and_state_dir(state_dir, log_dir):
             sys.exit(1)
 
 
-def get_sophos_jwt(client_id=None, client_secret=None):
+def get_sophos_jwt(client_id=None, client_secret=None, oauth_token_url=None):
     """Fetch the Sophos JWT access token.
 
     Get the token by calling Sophos API.
@@ -355,7 +355,7 @@ def get_sophos_jwt(client_id=None, client_secret=None):
     
     try:
         data = urlencode(body).encode("utf-8")
-        req = urlrequest.Request(OAUTH2_TOKEN_V2, data)
+        req = urlrequest.Request(oauth_token_url, data)
         response = urlrequest.urlopen(req)
 
         if response.code == 200:
