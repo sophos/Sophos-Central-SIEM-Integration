@@ -13,7 +13,7 @@ Any issue discovered using the script should be reported to Sophos Support.
 
 The script in this directory allows you to use the Sophos Central API to get data into your SIEM solution.
 
-Access to the APIs requires an access token that can be setup in the Sophos Central UI by going to System Settings from the navigation bar and then selecting API Token Management. From this page, you can click the Add Token button to create a new token.
+Access to the APIs requires an access token or API Credentials that can be setup in the Sophos Central UI by going to System Settings from the navigation bar and then selecting API Token Management or API Credentials. From this page, you can click the Add Token button to create a new token.
 Here is more information available on how to setup API Token: https://community.sophos.com/kb/en-us/125169
 
 You can view API Swagger Specification by accessing API Access URL from the access token created under Api Token Management in Sophos Central UI.
@@ -24,7 +24,7 @@ You can view API Swagger Specification by accessing API Access URL from the acce
 Download and extract from [here](https://github.com/sophos/Sophos-Central-SIEM-Integration/archive/v1.1.0.zip) for the latest release.
 For older version, please consult the Releases section below.
 For changes to the API, please consult the API Updates section below.
-The script requires Python 2.7.9+ to run.
+The script requires Python 3.5+ to run.
 
 #### Releases ####
 
@@ -58,11 +58,14 @@ config.ini is a configuration file that exists by default in the siem-scripts fo
 ##### Here are the steps to configure the script:
 1. Open config.ini in a text editor.
 2. Under 'API Access URL + Headers' in the config file, copy and paste the API Access URL + Headers block from the Api Token Management page in Sophos Central.
+3. Under Client ID and Client Secret in the config file, copy and paste the API Credentials from the API Token Management page in Sophos Central.
+4. Under Customer tenant id in the config file, you can mention the tenant id for which you want to fetch alerts and events.
 
 ##### Optional configuration steps:
 1. Under json, cef or keyvalue, you could choose the preferred output of the response i.e. json, cef or keyvalue.
 2. Under filename, you can specify the filename that your output would be saved to. Options are syslog, stdout or any custom file name. Custom files are created in a folder named log.
 3. If you are using syslog then under syslog properties in the config file, configure address, facility and socktype.
+4. under state_file_path, specify the full or relative path to the cache file (with a ".json" extension)
 
 
 ### Running the script
@@ -73,7 +76,7 @@ For more options and help on running the script run 'python siem.py -h'
 
 ### License
 
-Copyright 2016 Sophos Limited
+Copyright 2016-2021 Sophos Limited
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at:  http://www.apache.org/licenses/LICENSE-2.0
