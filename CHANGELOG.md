@@ -1,4 +1,4 @@
-# v1.1.0
+# v2.0.0
 ## New Features
 1. ****Added a “datastream” text identifier to each object in the API output to distinguish between events and alerts****
 - Example:

@@ -21,7 +21,7 @@ You can view API Swagger Specification by accessing API Access URL from the acce
 
 ### Installation ###
 
-Download and extract from [here](https://github.com/sophos/Sophos-Central-SIEM-Integration/archive/v1.1.0.zip) for the latest release.
+Download and extract from [here](https://github.com/sophos/Sophos-Central-SIEM-Integration/archive/v2.0.0.zip) for the latest release.
 For older version, please consult the Releases section below.
 For changes to the API, please consult the API Updates section below.
 The script requires Python 3.5+ to run.
@@ -30,7 +30,7 @@ The script requires Python 3.5+ to run.
 
 See [changelog](CHANGELOG.md) for full details.
 
-##### [v1.1.0](https://github.com/sophos/Sophos-Central-SIEM-Integration/archive/v1.1.0.zip) #####
+##### [v2.0.0](https://github.com/sophos/Sophos-Central-SIEM-Integration/archive/v2.0.0.zip) #####
 * CSA-2918: Adding text identifier to distinguish between an 'Event' and 'Alert'
 * CSA-2917: Fixing issue with double alert reporting
 
