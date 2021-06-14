@@ -30,7 +30,11 @@ The script requires Python 3.5+ to run.
 
 See [changelog](CHANGELOG.md) for full details.
 
-##### [v2.0.0](https://github.com/sophos/Sophos-Central-SIEM-Integration/archive/v2.0.0.zip) #####
+
+##### [v2.0.0](https://github.com/sophos/Sophos-Central-SIEM-Integration/archive/v1.1.0.zip) #####
+* CPLAT-29997: Modify siem.py to communicate with legacy-siem service
+
+##### [v1.1.0](https://github.com/sophos/Sophos-Central-SIEM-Integration/archive/v1.1.0.zip) #####
 * CSA-2918: Adding text identifier to distinguish between an 'Event' and 'Alert'
 * CSA-2917: Fixing issue with double alert reporting
 
