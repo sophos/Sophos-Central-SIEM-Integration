@@ -31,7 +31,7 @@ The script requires Python 3.5+ to run.
 See [changelog](CHANGELOG.md) for full details.
 
 
-##### [v2.0.0](https://github.com/sophos/Sophos-Central-SIEM-Integration/archive/v1.1.0.zip) #####
+##### [v2.0.0](https://github.com/sophos/Sophos-Central-SIEM-Integration/archive/v2.0.0.zip) #####
 * CPLAT-29997: Modify siem.py to communicate with legacy-siem service
 * CPLAT-34787: Support of partner and organisation to integrate SIEM.py with legacy-siem MS
 * CPLAT-34871: Create the single state file for siem.py to store all data
