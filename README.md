@@ -32,9 +32,9 @@ See [changelog](CHANGELOG.md) for full details.
 
 
 ##### [v2.0.0](https://github.com/sophos/Sophos-Central-SIEM-Integration/archive/v2.0.0.zip) #####
-* CPLAT-29997: Modify siem.py to communicate with legacy-siem service
-* CPLAT-34787: Support of partner and organisation to integrate SIEM.py with legacy-siem MS
-* CPLAT-34871: Create the single state file for siem.py to store all data
+* New JWT-based authentication for the SIEM API
+* Better support for partners and enterprise customers
+* State file consolidated
 
 ##### [v1.1.0](https://github.com/sophos/Sophos-Central-SIEM-Integration/archive/v1.1.0.zip) #####
 * CSA-2918: Adding text identifier to distinguish between an 'Event' and 'Alert'
