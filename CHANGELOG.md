@@ -1,4 +1,20 @@
 # v2.0.0
+1. Modify siem.py to communicate with legacy-siem service
+-	Add the client id and client secret key in config.ini
+--	Fetch the customers event and alert data by calling the Apigee endpoint if API credentials details exist in config.ini
+--	API credentials do not exist in config.ini then customer alert/event data fetched with the existing flow (By using a token)
+
+2. Support of partner and organisation to integrate SIEM.py with legacy-siem MS
+-	For partner and organisation, Make a tenant_id is required configuration in config.in
+--  For customer its optional, Make a tenant_id is optional configuration in config.in
+--	Implemente the caching mechanism in fetching JWT API.
+--	Use the tenant_id and JWT token to fetch the alerts and events data.
+
+3. Create the single state file for siem.py to store all data
+-  Store alert and event cursor details JSON format in state file under tenant and token object
+-  specify the state file path in config.ini. 
+
+# v1.1.0
 ## New Features
 1. ****Added a “datastream” text identifier to each object in the API output to distinguish between events and alerts****
 - Example:
