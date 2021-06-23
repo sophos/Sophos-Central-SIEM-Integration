@@ -6,9 +6,11 @@
 2. Better support for partners and enterprise customers
 - You can now use API credentials created from Partner Admin or Enterprise Admin in config.ini. You must identify the tenant from which to sync alerts and events by setting the `tenant_id` configuration parameter.
 - When using tenant-level API credentials, `tenant_id` is optional as it is automatically determined from the API credentials.
-3.State file consolidated
+3. State file consolidated
 - We have added a new JSON state file to capture the last sync time for alerts and events. 
 - Configure the path to the state file in config.ini.
+4. Drop support for Python 2.x
+- You now need Python 3.5+ to use this tool.
 
 # v1.1.0
 ## New Features

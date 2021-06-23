@@ -35,6 +35,7 @@ See [changelog](CHANGELOG.md) for full details.
 * New JWT-based authentication for the SIEM API
 * Better support for partners and enterprise customers
 * State file consolidated
+* Drop support for Python 2.x
 
 ##### [v1.1.0](https://github.com/sophos/Sophos-Central-SIEM-Integration/archive/v1.1.0.zip) #####
 * CSA-2918: Adding text identifier to distinguish between an 'Event' and 'Alert'
