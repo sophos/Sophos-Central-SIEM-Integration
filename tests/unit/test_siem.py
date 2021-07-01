@@ -15,7 +15,7 @@
  Unit tests for Sophos SIEM.
 
  Requirements
-  - Python 3.5+ (ActivePython recommended on Windows)
+  - Python 3.7+ (ActivePython recommended on Windows)
 """
 
 import os

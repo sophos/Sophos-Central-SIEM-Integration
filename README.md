@@ -24,7 +24,7 @@ You can view API Swagger Specification by accessing API Access URL from the acce
 Download and extract from [here](https://github.com/sophos/Sophos-Central-SIEM-Integration/archive/v2.0.0.zip) for the latest release.
 For older version, please consult the Releases section below.
 For changes to the API, please consult the API Updates section below.
-The script requires Python 3.5+ to run.
+The script requires Python 3.7+ to run.
 
 #### Releases ####
 

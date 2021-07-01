@@ -16,7 +16,7 @@
 """
  This script is for testing regressions after changes to Sophos SIEM.
  Requirements
-  - Python 3.5+ (ActivePython recommended on Windows)
+  - Python 3.7+ (ActivePython recommended on Windows)
   - pycef module to decode CEF output. (https://github.com/DavidJBianco/pycef/)
     There is no equivalent for keyvalue, so that test is expected to fail at least half the time.
   - Some typical events in Central.

@@ -10,7 +10,7 @@
 - We have added a new JSON state file to capture the last sync time for alerts and events. 
 - Configure the path to the state file in config.ini.
 4. Drop support for Python 2.x
-- You now need Python 3.5+ to use this tool.
+- You now need Python 3.7+ to use this tool.
 
 # v1.1.0
 ## New Features
