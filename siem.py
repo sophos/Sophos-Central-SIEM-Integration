@@ -22,6 +22,7 @@ from optparse import OptionParser
 import name_mapping
 import config
 import api_client
+import vercheck
 
 VERSION = "1.0.0"
 QUIET = False
