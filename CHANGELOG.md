@@ -1,5 +1,5 @@
 #v2.0.1
-* Added check for minimum supported Python version.
+1. Added check for minimum supported Python version.
 
 # v2.0.0
 1. New JWT-based authentication for the SIEM API
