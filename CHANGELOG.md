@@ -1,3 +1,6 @@
+#v2.0.1
+* Added check for minimum supported Python version.
+
 # v2.0.0
 1. New JWT-based authentication for the SIEM API
 - You can now use Sophos Central public [API credentials](https://developer.sophos.com/getting-started) to sync alerts and events from the SIEM API.
