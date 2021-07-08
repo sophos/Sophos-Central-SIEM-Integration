@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright 2019-2021 Sophos Limited
 #
@@ -22,8 +22,9 @@ from optparse import OptionParser
 import name_mapping
 import config
 import api_client
+import vercheck
 
-VERSION = "1.0.0"
+VERSION = "2.0.1"
 QUIET = False
 MISSING_VALUE = "NA"
 DEFAULT_ENDPOINT = "event"
