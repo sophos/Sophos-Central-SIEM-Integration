@@ -429,6 +429,7 @@ class TestApiClient(unittest.TestCase):
             "has_more": False,
             "next_cursor": "TEST1VSU09SfDITESTETSTETtMDFUMTg6MjU6NDEuNjA2Wg==",
             "items": [{"id": "1", "idType": "test", "apiHost": "http://localhost"}],
+            "pages":{'current': 1, 'size': 100, 'total': 1, 'items': 1, 'maxSize': 100}
         }
         self.api_client.config.api_host = "http://localhost"
         self.api_client.config.tenant_id = "1"
