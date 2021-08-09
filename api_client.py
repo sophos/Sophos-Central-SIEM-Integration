@@ -544,25 +544,21 @@ class ApiClient:
                 whoami_response["apiHosts"]["global"]
                 + "/"
                 + whoami_response["idType"]
-                + "/v1/tenants?pageTotal=True&pageSize=100"
+                + "/v1/tenants?pageTotal=true&pageSize=100"
             )
             tenant_response = self.request_url(tenant_url + "&page=" + str(page_no), None, default_headers, 1)
 
             self.log("Tenant page %s response: %s" % (page_no, tenant_response))
             tenants = json.loads(tenant_response)
-            tenants["items"] = list(
-                filter(lambda tenant: tenant["id"] == self.config.tenant_id, tenants["items"])
-            )
-            total_page = tenants['pages']['total']
+            tenants["items"] = [x for x in tenants["items"] if x["id"] == self.config.tenant_id]
+            total_pages = tenants['pages']['total']
 
-            while total_page != page_no and len(tenants["items"])==0:
-                page_no = page_no + 1
+            while page_no < total_pages and len(tenants["items"])==0:
+                page_no += 1
                 tenant_response = self.request_url(tenant_url + "&page=" + str(page_no), None, default_headers, 1)
                 self.log("Tenant page %s response: %s" % (page_no, tenant_response))
                 tenants = json.loads(tenant_response)
-                tenants["items"] = list(
-                    filter(lambda tenant: tenant["id"] == self.config.tenant_id, tenants["items"])
-                )
+                tenants["items"] = [x for x in tenants["items"] if x["id"] == self.config.tenant_id]
 
             if len(tenants["items"]) > 0:
                 return tenants

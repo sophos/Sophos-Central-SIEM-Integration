@@ -426,8 +426,6 @@ class TestApiClient(unittest.TestCase):
         }
 
         tenant_response = {
-            "has_more": False,
-            "next_cursor": "TEST1VSU09SfDITESTETSTETtMDFUMTg6MjU6NDEuNjA2Wg==",
             "items": [{"id": "1", "idType": "test", "apiHost": "http://localhost"}],
             "pages":{'current': 1, 'size': 100, 'total': 1, 'items': 1, 'maxSize': 100}
         }
@@ -441,3 +439,52 @@ class TestApiClient(unittest.TestCase):
             whoami_response, "test_token"
         )
         self.assertEqual(response, tenant_response)
+
+    def test_get_partner_organization_empty_tenants(self):
+        whoami_response = {
+            "id": "1",
+            "idType": "partner",
+            "apiHosts": {"global": "http://localhost"},
+        }
+
+        tenant_response = {
+            "items": [],
+            "pages":{'current': 0, 'size': 0, 'total': 0, 'items': 0, 'maxSize': 100}
+        }
+        self.api_client.config.api_host = "http://localhost"
+        self.api_client.config.tenant_id = "1"
+        self.api_client.config.client_secret = "test_client_secret"
+        self.api_client.state.save_state = MagicMock()
+        self.api_client.request_url = MagicMock()
+        self.api_client.request_url.return_value = json.dumps(tenant_response)
+        response = self.api_client.get_partner_organization_tenants(
+            whoami_response, "test_token"
+        )
+        self.assertTrue(
+            "Configuration file mention tenant id not matched with whoami data tenant id"
+            in str(response)
+        )
+
+    def test_get_partner_organization_tenants_error(self):
+        whoami_response = {
+            "id": "1",
+            "idType": "partner",
+            "apiHosts": {"global": "http://localhost"},
+        }
+
+        tenant_response = {
+        }
+        self.api_client.config.api_host = "http://localhost"
+        self.api_client.config.tenant_id = "1"
+        self.api_client.config.client_secret = "test_client_secret"
+        self.api_client.state.save_state = MagicMock()
+        self.api_client.request_url = MagicMock()
+        self.api_client.request_url.return_value = json.dumps(tenant_response)
+        response = self.api_client.get_partner_organization_tenants(
+            whoami_response, "test_token"
+        )
+        self.assertTrue(
+            "error"
+            in str(response)
+        )
+        
