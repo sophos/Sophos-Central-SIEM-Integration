@@ -80,7 +80,7 @@ def write_json_format(results):
         i = remove_null_values(i)
         update_cef_keys(i)
         name_mapping.update_fields(log, i)
-        SIEM_LOGGER.info(json.dumps(i, ensure_ascii=False, indent=4) + u"\n")
+        SIEM_LOGGER.info(json.dumps(i, ensure_ascii=False) + u"\n")
 
 
 def write_keyvalue_format(results):
