@@ -322,9 +322,9 @@ class ApiClient:
         else:
             params["from_date"] = since
 
-        args = self.get_alerts_or_events_req_args(params)
 
         while True:
+            args = self.get_alerts_or_events_req_args(params)
             events = self.call_endpoint(token.url, default_headers, args)
 
             if "items" in events and len(events["items"]) > 0:
@@ -372,9 +372,9 @@ class ApiClient:
             else:
                 params["from_date"] = since
 
-            args = self.get_alerts_or_events_req_args(params)
 
             while True:
+                args = self.get_alerts_or_events_req_args(params)
                 dataRegionURL = tenant["apiHost"] if 'idType' not in tenant else tenant['apiHosts']['dataRegion']
                 events = self.call_endpoint(dataRegionURL, default_headers, args)
 
