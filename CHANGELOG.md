@@ -1,4 +1,4 @@
-#v2.0.1
+# v2.0.1
 1. Added check for minimum supported Python version.
 
 # v2.0.0
