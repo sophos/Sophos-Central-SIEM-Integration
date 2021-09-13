@@ -102,7 +102,6 @@ def write_keyvalue_format(results):
                 ]
                 + events
             )
-            + u"\n"
         )
 
 
@@ -114,7 +113,7 @@ def write_cef_format(results):
     for i in results:
         i = remove_null_values(i)
         name_mapping.update_fields(log, i)
-        SIEM_LOGGER.info(format_cef(flatten_json(i)) + u"\n")
+        SIEM_LOGGER.info(format_cef(flatten_json(i)))
 
 
 # Flattening JSON objects in Python
