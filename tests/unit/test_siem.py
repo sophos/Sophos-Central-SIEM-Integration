@@ -47,7 +47,7 @@ class TestSiem(unittest.TestCase):
         self.assertEqual(mock_update_fields.call_count, 1)
         mock_update_fields.assert_called_with(siem.log, results[0])
         self.assertEqual(self.LOGGER_MOCK.info.call_count, 1)
-        self.LOGGER_MOCK.info.assert_called_with(u'{\n    "key": "value"\n}\n')
+        self.LOGGER_MOCK.info.assert_called_with(u'{"key": "value"}')
 
     @patch("name_mapping.update_fields")
     def test_write_keyvalue_format(self, mock_update_fields):
@@ -61,7 +61,7 @@ class TestSiem(unittest.TestCase):
         self.assertEqual(mock_update_fields.call_count, 1)
         mock_update_fields.assert_called_with(siem.log, results[0])
         self.assertEqual(self.LOGGER_MOCK.info.call_count, 1)
-        self.LOGGER_MOCK.info.assert_called_with(u'date rt="date";\n')
+        self.LOGGER_MOCK.info.assert_called_with(u'date rt="date";')
 
     @patch("name_mapping.update_fields")
     def test_write_cef_format(self, mock_update_fields):
@@ -76,7 +76,7 @@ class TestSiem(unittest.TestCase):
         mock_update_fields.assert_called_with(siem.log, results[0])
         self.assertEqual(self.LOGGER_MOCK.info.call_count, 1)
         self.LOGGER_MOCK.info.assert_called_with(
-            u"CEF:0|sophos|sophos central|1.0|NA|NA|0|key=value\n"
+            u"CEF:0|sophos|sophos central|1.0|NA|NA|0|key=value"
         )
 
     def test_flatten_json(self):
