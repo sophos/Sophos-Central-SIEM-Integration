@@ -374,8 +374,8 @@ class ApiClient:
         args = self.get_alerts_or_events_req_args(params)
 
         while True:
-            dataRegionURL = tenant_obj["apiHost"] if "idType" not in tenant_obj else tenant_obj["apiHosts"]["dataRegion"]
-            events = self.call_endpoint(dataRegionURL, default_headers, args)
+            data_region_url = tenant_obj["apiHost"] if "idType" not in tenant_obj else tenant_obj["apiHosts"]["dataRegion"]
+            events = self.call_endpoint(data_region_url, default_headers, args)
             if "items" in events and len(events["items"]) > 0:
                 for e in events["items"]:
                     e["datastream"] = (
@@ -392,7 +392,7 @@ class ApiClient:
             last_run_key = "tenants." + tenant_id + ".lastRunAt"
 
             self.state.save_state(cursor_key, events["next_cursor"])
-            self.state.save_state(data_region_url_key, dataRegionURL)
+            self.state.save_state(data_region_url_key, data_region_url)
             self.state.save_state(last_run_key, time.time())
             if not events["has_more"]:
                 break
