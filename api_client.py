@@ -322,9 +322,9 @@ class ApiClient:
         else:
             params["from_date"] = since
 
-        args = self.get_alerts_or_events_req_args(params)
 
         while True:
+            args = self.get_alerts_or_events_req_args(params)
             events = self.call_endpoint(token.url, default_headers, args)
 
             if "items" in events and len(events["items"]) > 0:
@@ -360,20 +360,9 @@ class ApiClient:
             "Authorization": "Bearer " + tenant_obj["access_token"],
         }
         params = {"limit": 1000}
-
-        if (
-            "tenants" in self.state_data
-            and tenant_id in self.state_data["tenants"]
-            and state_data_key in self.state_data["tenants"][tenant_id]
-        ):
-            params["cursor"] = self.state_data["tenants"][tenant_id][state_data_key]
-            self.jitter()
-        else:
-            params["from_date"] = since
-
-        args = self.get_alerts_or_events_req_args(params)
-
+        
         while True:
+            args = self.get_alerts_or_events_req_args(params)
             data_region_url = tenant_obj["apiHost"] if "idType" not in tenant_obj else tenant_obj["apiHosts"]["dataRegion"]
             events = self.call_endpoint(data_region_url, default_headers, args)
             if "items" in events and len(events["items"]) > 0:
