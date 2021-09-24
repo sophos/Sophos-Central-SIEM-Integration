@@ -560,7 +560,7 @@ class ApiClient:
                 return tenant
                     
             except json.decoder.JSONDecodeError as e:
-                self.log("Sophos partner tenant API response not in json format")
+                self.log(f"Sophos {whoami_response['idType']} tenant API response not in json format")
                 return {"error": e}
             except Exception as e:
                 self.log("Error :: %s" % e)
