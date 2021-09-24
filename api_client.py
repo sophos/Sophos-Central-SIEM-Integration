@@ -565,7 +565,7 @@ class ApiClient:
             except Exception as e:
                 self.log("Error :: %s" % e)
                 raise Exception(
-                    "Configured Tenant ID is not managed by Partner/Organisation whose credentials are provided"
+                     f"Configured Tenant ID is not managed by {whoami_response['idType']} whose credentials are provided"
                 )
         else:
             raise Exception(
