@@ -467,3 +467,22 @@ class TestApiClient(unittest.TestCase):
             "Configuration file mention tenant id not matched with whoami data tenant id"
             in str(context.exception)
         )
+
+    def test_get_partner_organization_tenants_empty_error(self):
+        whoami_response = {
+            "id": "1",
+            "idType": "partner",
+            "apiHosts": {"global": "http://localhost"},
+        }
+
+        tenant_response = {
+        }
+        self.api_client.config.api_host = "http://localhost"
+        self.api_client.config.tenant_id = ""
+        self.api_client.config.client_secret = "test_client_secret"
+        with self.assertRaises(Exception) as context:
+            self.api_client.get_partner_organization_tenants(whoami_response, 'test_token')
+        self.assertTrue(
+            "For the partner/organization, you must specify the tenant id in config.ini"
+            in str(context.exception)
+        )
