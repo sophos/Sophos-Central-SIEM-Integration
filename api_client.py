@@ -428,7 +428,7 @@ class ApiClient:
                         != whoami_response["id"]
                     ):
                         raise Exception(
-                            "Configuration file mention tenant id not matched with whoami data tenant id"
+                            "Configured Tenant ID is not managed by Partner/Organisation whose credentials are provided"
                         )
                     else:
                         tenant_data = whoami_response
@@ -565,7 +565,7 @@ class ApiClient:
             except Exception as e:
                 self.log("Error :: %s" % e)
                 raise Exception(
-                    "Configuration file mention tenant id not matched with whoami data tenant id"
+                    "Configured Tenant ID is not managed by Partner/Organisation whose credentials are provided"
                 )
         else:
             raise Exception(
