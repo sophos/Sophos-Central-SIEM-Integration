@@ -375,7 +375,7 @@ class TestApiClient(unittest.TestCase):
         with self.assertRaises(Exception) as context:
             self.api_client.get_tenants_from_sophos()
         self.assertTrue(
-            "Configured Tenant ID is not managed by Partner/Organisation whose credentials are provided"
+            "Configuration file mention tenant id not matched with whoami data tenant id"
             in str(context.exception)
         )
 
