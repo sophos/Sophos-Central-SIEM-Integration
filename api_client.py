@@ -569,5 +569,5 @@ class ApiClient:
                 )
         else:
             raise Exception(
-                "For the partner/organization, you must specify the tenant id in config.ini"
+                f"For the {whoami_response['idType']}, you must specify the tenant id in config.ini"
             )
