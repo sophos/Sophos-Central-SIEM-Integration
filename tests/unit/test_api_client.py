@@ -483,6 +483,6 @@ class TestApiClient(unittest.TestCase):
         with self.assertRaises(Exception) as context:
             self.api_client.get_partner_organization_tenants(whoami_response, 'test_token')
         self.assertTrue(
-            "For the partner, you must specify the tenant id in config.ini"
+            "When using partner credentials, you must specify the tenant id in config.ini"
             in str(context.exception)
         )

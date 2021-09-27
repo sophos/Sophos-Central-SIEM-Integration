@@ -545,7 +545,6 @@ class ApiClient:
                         "X-Partner-ID": whoami_response["id"],
                     }
                     
-                page_no = 1
                 tenant_url = (
                     whoami_response["apiHosts"]["global"]
                     + "/"
@@ -556,8 +555,7 @@ class ApiClient:
                 tenant_response = self.request_url(tenant_url, None, default_headers, 1)
 
                 self.log("Tenant response: %s" % (tenant_response))
-                tenant = json.loads(tenant_response)
-                return tenant
+                return json.loads(tenant_response)
                     
             except json.decoder.JSONDecodeError as e:
                 self.log(f"Sophos {whoami_response['idType']} tenant API response not in json format")
@@ -569,5 +567,5 @@ class ApiClient:
                 )
         else:
             raise Exception(
-                f"For the {whoami_response['idType']}, you must specify the tenant id in config.ini"
+                f"When using {whoami_response['idType']} credentials, you must specify the tenant id in config.ini"
             )
