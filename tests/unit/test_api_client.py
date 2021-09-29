@@ -134,9 +134,12 @@ class TestApiClient(unittest.TestCase):
             "items": [],
         }
         mock_tenant_response = {
-            "has_more": False,
-            "next_cursor": "TEST1VSU09SfDITESTETSTETtMDFUMTg6MjU6NDEuNjA2Wg==",
-            "items": [{"id": 1, "idType": "test", "apiHost": "http://localhost"}],
+            "id": 1, 
+            "idType": "test", 
+            "apiHost": "http://localhost",
+            "name": "test tenant",
+            "dataRegion": "test",
+            "status": "active"
         }
         self.api_client.config.client_id = "test_client_id"
         self.api_client.config.client_secret = "test_client_secret"
@@ -272,7 +275,12 @@ class TestApiClient(unittest.TestCase):
             "access_token": "test_access_token",
             "has_more": False,
             "next_cursor": "TEST1VSU09SfDITESTETSTETtMDFUMTg6MjU6NDEuNjA2Wg==",
-            "items": [{"id": "1", "apiHost": "http://localhost"}],
+            "id": "1", 
+            "apiHost": "http://localhost",
+            "name": "test tenant",
+            "dataGeography": "TE",
+            "dataRegion": "te01",
+            "status": "active"
         }
         mock_response = {
             "has_more": False,
@@ -361,7 +369,7 @@ class TestApiClient(unittest.TestCase):
         response = self.api_client.get_tenants_from_sophos()
         self.assertEqual(
             response,
-            {"access_token": "Test_Toekn", "items": [{"id": "1", "idType": "tenant"}]},
+            {"access_token": "Test_Toekn", "id": "1", "idType": "tenant"},
         )
         self.api_client.config.tenant_id = "11"
         with self.assertRaises(Exception) as context:
@@ -426,9 +434,8 @@ class TestApiClient(unittest.TestCase):
         }
 
         tenant_response = {
-            "has_more": False,
-            "next_cursor": "TEST1VSU09SfDITESTETSTETtMDFUMTg6MjU6NDEuNjA2Wg==",
             "items": [{"id": "1", "idType": "test", "apiHost": "http://localhost"}],
+            "pages":{'current': 1, 'size': 100, 'total': 1, 'items': 1, 'maxSize': 100}
         }
         self.api_client.config.api_host = "http://localhost"
         self.api_client.config.tenant_id = "1"
@@ -440,3 +447,42 @@ class TestApiClient(unittest.TestCase):
             whoami_response, "test_token"
         )
         self.assertEqual(response, tenant_response)
+
+
+    def test_get_partner_organization_tenants_error(self):
+        whoami_response = {
+            "id": "1",
+            "idType": "partner",
+            "apiHosts": {"global": "http://localhost"},
+        }
+
+        tenant_response = {
+        }
+        self.api_client.config.api_host = "http://localhost"
+        self.api_client.config.tenant_id = "1"
+        self.api_client.config.client_secret = "test_client_secret"
+        with self.assertRaises(Exception) as context:
+            self.api_client.get_partner_organization_tenants(whoami_response, 'test_token')
+        self.assertTrue(
+            "Error getting tenant 1"
+            in str(context.exception)
+        )
+
+    def test_get_partner_organization_tenants_empty_error(self):
+        whoami_response = {
+            "id": "1",
+            "idType": "partner",
+            "apiHosts": {"global": "http://localhost"},
+        }
+
+        tenant_response = {
+        }
+        self.api_client.config.api_host = "http://localhost"
+        self.api_client.config.tenant_id = ""
+        self.api_client.config.client_secret = "test_client_secret"
+        with self.assertRaises(Exception) as context:
+            self.api_client.get_partner_organization_tenants(whoami_response, 'test_token')
+        self.assertTrue(
+            "When using partner credentials, you must specify the tenant id in config.ini"
+            in str(context.exception)
+        )

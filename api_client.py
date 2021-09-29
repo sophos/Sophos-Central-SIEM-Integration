@@ -240,13 +240,13 @@ class ApiClient:
         ):
             tenant_obj = self.get_tenants_from_sophos()
 
-            if "items" in tenant_obj:
+            if "id" in tenant_obj:
                 results = self.make_credentials_request(
                     since, endpoint_name, tenant_obj
                 )
             else:
                 self.log("Error :: %s" % tenant_obj["error"])
-                raise Exception(tenant_obj['error'])
+                raise Exception(tenant_obj["error"])
         else:
             token_data = config.Token(self.config.token_info)
             results = self.make_token_request(
@@ -354,53 +354,51 @@ class ApiClient:
             dict -- yield event/alert object
         """
         state_data_key = endpoint_name + "LastFetched"
-        for tenant in tenant_obj["items"]:
-            tenant_id = tenant["id"]
-            default_headers = {
-                "X-Tenant-ID": tenant_id,
-                "Authorization": "Bearer " + tenant_obj["access_token"],
-            }
-            params = {"limit": 1000}
+        tenant_id = tenant_obj["id"]
+        default_headers = {
+            "X-Tenant-ID": tenant_id,
+            "Authorization": "Bearer " + tenant_obj["access_token"],
+        }
+        params = {"limit": 1000}
 
-            if (
-                "tenants" in self.state_data
-                and tenant_id in self.state_data["tenants"]
-                and state_data_key in self.state_data["tenants"][tenant_id]
-            ):
-                params["cursor"] = self.state_data["tenants"][tenant_id][state_data_key]
-                self.jitter()
-            else:
-                params["from_date"] = since
+        if (
+            "tenants" in self.state_data
+            and tenant_id in self.state_data["tenants"]
+            and state_data_key in self.state_data["tenants"][tenant_id]
+        ):
+            params["cursor"] = self.state_data["tenants"][tenant_id][state_data_key]
+            self.jitter()
+        else:
+            params["from_date"] = since
 
 
-            while True:
-                args = self.get_alerts_or_events_req_args(params)
-                dataRegionURL = tenant["apiHost"] if 'idType' not in tenant else tenant['apiHosts']['dataRegion']
-                events = self.call_endpoint(dataRegionURL, default_headers, args)
-
-                if "items" in events and len(events["items"]) > 0:
-                    for e in events["items"]:
-                        e["datastream"] = (
-                            EVENT_TYPE if (self.endpoint == EVENTS_V1) else ALERT_TYPE
-                        )
-                        yield e
-                else:
-                    self.log(
-                        "No new %s data retrieved from the API"
-                        % endpoint_name
+        while True:
+            args = self.get_alerts_or_events_req_args(params)
+            data_region_url = tenant_obj["apiHost"] if "idType" not in tenant_obj else tenant_obj["apiHosts"]["dataRegion"]
+            events = self.call_endpoint(data_region_url, default_headers, args)
+            if "items" in events and len(events["items"]) > 0:
+                for e in events["items"]:
+                    e["datastream"] = (
+                        EVENT_TYPE if (self.endpoint == EVENTS_V1) else ALERT_TYPE
                     )
-                cursor_key = "tenants." + tenant_id + "." + state_data_key
-                data_region_url_key = "tenants." + tenant_id + ".dataRegionUrl"
-                last_run_key = "tenants." + tenant_id + ".lastRunAt"
+                    yield e
+            else:
+                self.log(
+                    "No new %s data retrieved from the API"
+                    % endpoint_name
+                )
+            cursor_key = "tenants." + tenant_id + "." + state_data_key
+            data_region_url_key = "tenants." + tenant_id + ".dataRegionUrl"
+            last_run_key = "tenants." + tenant_id + ".lastRunAt"
 
-                self.state.save_state(cursor_key, events["next_cursor"])
-                self.state.save_state(data_region_url_key, dataRegionURL)
-                self.state.save_state(last_run_key, time.time())
-                if not events["has_more"]:
-                    break
-                else:
-                    params["cursor"] = events["next_cursor"]
-                    params.pop("from_date", None)
+            self.state.save_state(cursor_key, events["next_cursor"])
+            self.state.save_state(data_region_url_key, data_region_url)
+            self.state.save_state(last_run_key, time.time())
+            if not events["has_more"]:
+                break
+            else:
+                params["cursor"] = events["next_cursor"]
+                params.pop("from_date", None)
 
     def get_tenants_from_sophos(self):
         """Fetch the tenants for partner or organization.
@@ -433,7 +431,7 @@ class ApiClient:
                             "Configuration file mention tenant id not matched with whoami data tenant id"
                         )
                     else:
-                        tenant_data = {"items": [whoami_response]}
+                        tenant_data = whoami_response
                         tenant_data["access_token"] = access_token
                 return tenant_data
             else:
@@ -533,34 +531,40 @@ class ApiClient:
         Returns:
             dict -- response containing whoami response or error
         """
-        tenants = {}
+        if not self.config.tenant_id:
+            raise Exception(
+                f"When using {whoami_response['idType']} credentials, you must specify the tenant id in config.ini"
+            )
+            
+        tenant = {}
         try:
-            default_headers = {
-                "Authorization": "Bearer " + access_token,
-                "X-Partner-ID": whoami_response["id"],
-            }
+            if whoami_response["idType"] == "organization":
+                default_headers = {
+                    "Authorization": "Bearer " + access_token,
+                    "X-Organization-ID": whoami_response["id"],
+                }
+            else:
+                default_headers = {
+                    "Authorization": "Bearer " + access_token,
+                    "X-Partner-ID": whoami_response["id"],
+                }
+                
             tenant_url = (
                 whoami_response["apiHosts"]["global"]
                 + "/"
                 + whoami_response["idType"]
-                + "/v1/tenants"
+                + "/v1/tenants/"
+                + self.config.tenant_id
             )
             tenant_response = self.request_url(tenant_url, None, default_headers, 1)
 
-            self.log("Tenant response: %s" % tenant_response)
-            tenants = json.loads(tenant_response)
-            tenants["items"] = list(
-                filter(lambda tenant: tenant["id"] == self.config.tenant_id, tenants["items"])
-            )
-            if len(tenants["items"]) > 0:
-                return tenants
-            else:
-                raise Exception(
-                    "Configuration file mention tenant id not matched with whoami data tenant id"
-                )
+            self.log("Tenant response: %s" % (tenant_response))
+            return json.loads(tenant_response)
+                
         except json.decoder.JSONDecodeError as e:
-            self.log("Sophos partner tenant API response not in json format")
+            self.log(f"Sophos {whoami_response['idType']} tenant API response not in json format")
             return {"error": e}
         except Exception as e:
-            self.log("Error :: %s" % e)
-            return {"error": e}
+            raise Exception(
+                    f"Error getting tenant {self.config.tenant_id}, {e}"
+            )
