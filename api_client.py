@@ -531,7 +531,11 @@ class ApiClient:
         Returns:
             dict -- response containing whoami response or error
         """
-        if self.config.tenant_id:
+        if not self.config.tenant_id:
+            raise Exception(
+                f"When using {whoami_response['idType']} credentials, you must specify the tenant id in config.ini"
+            )
+        else:
             tenant = {}
             try:
                 if whoami_response["idType"] == "organization":
@@ -564,7 +568,3 @@ class ApiClient:
                 raise Exception(
                      f"Error getting tenant {self.config.tenant_id}, {e}"
                 )
-        else:
-            raise Exception(
-                f"When using {whoami_response['idType']} credentials, you must specify the tenant id in config.ini"
-            )
