@@ -464,7 +464,7 @@ class TestApiClient(unittest.TestCase):
         with self.assertRaises(Exception) as context:
             self.api_client.get_partner_organization_tenants(whoami_response, 'test_token')
         self.assertTrue(
-            "Configured Tenant ID is not managed by partner whose credentials are provided"
+            "Error getting tenant 1"
             in str(context.exception)
         )
 

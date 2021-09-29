@@ -561,9 +561,8 @@ class ApiClient:
                 self.log(f"Sophos {whoami_response['idType']} tenant API response not in json format")
                 return {"error": e}
             except Exception as e:
-                self.log("Error :: %s" % e)
                 raise Exception(
-                     f"Configured Tenant ID is not managed by {whoami_response['idType']} whose credentials are provided"
+                     f"Error getting tenant {self.config.tenant_id}, {e}"
                 )
         else:
             raise Exception(
