@@ -535,36 +535,36 @@ class ApiClient:
             raise Exception(
                 f"When using {whoami_response['idType']} credentials, you must specify the tenant id in config.ini"
             )
-        else:
-            tenant = {}
-            try:
-                if whoami_response["idType"] == "organization":
-                    default_headers = {
-                        "Authorization": "Bearer " + access_token,
-                        "X-Organization-ID": whoami_response["id"],
-                    }
-                else:
-                    default_headers = {
-                        "Authorization": "Bearer " + access_token,
-                        "X-Partner-ID": whoami_response["id"],
-                    }
-                    
-                tenant_url = (
-                    whoami_response["apiHosts"]["global"]
-                    + "/"
-                    + whoami_response["idType"]
-                    + "/v1/tenants/"
-                    + self.config.tenant_id
-                )
-                tenant_response = self.request_url(tenant_url, None, default_headers, 1)
+            
+        tenant = {}
+        try:
+            if whoami_response["idType"] == "organization":
+                default_headers = {
+                    "Authorization": "Bearer " + access_token,
+                    "X-Organization-ID": whoami_response["id"],
+                }
+            else:
+                default_headers = {
+                    "Authorization": "Bearer " + access_token,
+                    "X-Partner-ID": whoami_response["id"],
+                }
+                
+            tenant_url = (
+                whoami_response["apiHosts"]["global"]
+                + "/"
+                + whoami_response["idType"]
+                + "/v1/tenants/"
+                + self.config.tenant_id
+            )
+            tenant_response = self.request_url(tenant_url, None, default_headers, 1)
 
-                self.log("Tenant response: %s" % (tenant_response))
-                return json.loads(tenant_response)
-                    
-            except json.decoder.JSONDecodeError as e:
-                self.log(f"Sophos {whoami_response['idType']} tenant API response not in json format")
-                return {"error": e}
-            except Exception as e:
-                raise Exception(
-                     f"Error getting tenant {self.config.tenant_id}, {e}"
-                )
+            self.log("Tenant response: %s" % (tenant_response))
+            return json.loads(tenant_response)
+                
+        except json.decoder.JSONDecodeError as e:
+            self.log(f"Sophos {whoami_response['idType']} tenant API response not in json format")
+            return {"error": e}
+        except Exception as e:
+            raise Exception(
+                    f"Error getting tenant {self.config.tenant_id}, {e}"
+            )
