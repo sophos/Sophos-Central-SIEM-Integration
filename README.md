@@ -13,10 +13,8 @@ Any issue discovered using the script should be reported to Sophos Support.
 
 The script in this directory allows you to use the Sophos Central API to get data into your SIEM solution.
 
-Access to the APIs requires an access token or API Credentials that can be setup in the Sophos Central UI by going to System Settings from the navigation bar and then selecting API Token Management or API Credentials. From this page, you can click the Add Token button to create a new token.
-Here is more information available on how to setup API Token: https://community.sophos.com/kb/en-us/125169
-
-You can view API Swagger Specification by accessing API Access URL from the access token created under Api Token Management in Sophos Central UI.
+Access to the APIs requires API Credentials that can be setup in the Sophos Central UI by going to Global Settings from the navigation bar and then selecting API Credentials Management. From this page, you can click the Add Credential button to create new credentials (client ID and client secret).
+Here is more information available on how to setup API Credentials: https://community.sophos.com/kb/en-us/125169
 
 
 ### Installation ###
@@ -66,9 +64,8 @@ config.ini is a configuration file that exists by default in the siem-scripts fo
 
 ##### Here are the steps to configure the script:
 1. Open config.ini in a text editor.
-2. Under 'API Access URL + Headers' in the config file, copy and paste the API Access URL + Headers block from the Api Token Management page in Sophos Central.
-3. Under Client ID and Client Secret in the config file, copy and paste the API Credentials from the API Token Management page in Sophos Central.
-4. Under Customer tenant id in the config file, you can mention the tenant id for which you want to fetch alerts and events.
+2. Under Client ID and Client Secret in the config file, copy and paste the API Credentials from the API Credentials Management page in Sophos Central.
+3. Under Customer tenant id in the config file, you can mention the tenant id for which you want to fetch alerts and events.
 
 ##### Optional configuration steps:
 1. Under json, cef or keyvalue, you could choose the preferred output of the response i.e. json, cef or keyvalue.
@@ -79,8 +76,16 @@ config.ini is a configuration file that exists by default in the siem-scripts fo
 
 ### Running the script
 
-Run 'python siem.py' and you should see the results as specified in the config file.
-For more options and help on running the script run 'python siem.py -h'
+Run `python siem.py` and you should see the results as specified in the config file. Here is the list of available options:
+
+| Option | Description |
+| ------ | ----------- |
+| -s \<Unix Timestamp\>, --since=<Unix Timestamp> | Return results since specified Unix Timestamp, max last 24 hours, defaults to last 12 hours if there is no state file | 
+| -c \<Config File Path\>, --config=<Config File Path> | Specify a configuration file, defaults to config.ini |
+| -l, --light | Ignore noisy events: web control (`Event::Endpoint::WebControlViolation`, `Event::Endpoint::WebFilteringBlocked`), device control (`Event::Endpoint::Device::AlertedOnly`, `Event::Endpoint::SavScanComplete`), update success/failure (`Event::Endpoint::UpdateFailure`, `Event::Endpoint::UpdateSuccess`), application allowed (`Event::Endpoint::Application::Allowed`), (non)compliant (`Event::Endpoint::NonCompliant`, `Event::Endpoint::Compliant`) |
+| -d, --debug | Print debug logs |
+| -v, --version | Print version |
+| -q, --quiet | Suppress status messages. No output would be printed by `siem.py` |
 
 
 ### License
