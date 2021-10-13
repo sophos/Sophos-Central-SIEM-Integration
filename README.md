@@ -15,7 +15,7 @@ Any issue discovered using the script should be reported to Sophos Support.
 The script in this directory allows you to use the Sophos Central API to get data into your SIEM solution.
 
 Access to the APIs requires API Credentials that can be setup in the Sophos Central UI by going to Global Settings from the navigation bar and then selecting API Credentials Management. From this page, you can click the Add Credential button to create new credentials (client ID and client secret).
-Here is more information available on how to setup API Credentials: (https://community.sophos.com/kb/en-us/125169)
+Here is more information available on how to setup API Credentials: [https://community.sophos.com/kb/en-us/125169](https://community.sophos.com/kb/en-us/125169)
 
 
 ### Installation ###
@@ -101,6 +101,6 @@ Run `python siem.py` and you should see the results as specified in the config f
 Copyright 2016-2021 Sophos Limited
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
-You may obtain a copy of the License at:  (http://www.apache.org/licenses/LICENSE-2.0)
+You may obtain a copy of the License at: [LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
