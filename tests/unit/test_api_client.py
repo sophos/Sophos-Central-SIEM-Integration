@@ -134,8 +134,8 @@ class TestApiClient(unittest.TestCase):
             "items": [],
         }
         mock_tenant_response = {
-            "id": 1, 
-            "idType": "test", 
+            "id": 1,
+            "idType": "test",
             "apiHost": "http://localhost",
             "name": "test tenant",
             "dataRegion": "test",
@@ -275,7 +275,7 @@ class TestApiClient(unittest.TestCase):
             "access_token": "test_access_token",
             "has_more": False,
             "next_cursor": "TEST1VSU09SfDITESTETSTETtMDFUMTg6MjU6NDEuNjA2Wg==",
-            "id": "1", 
+            "id": "1",
             "apiHost": "http://localhost",
             "name": "test tenant",
             "dataGeography": "TE",
@@ -486,3 +486,17 @@ class TestApiClient(unittest.TestCase):
             "When using partner credentials, you must specify the tenant id in config.ini"
             in str(context.exception)
         )
+
+    def test_get_since_value_option_given(self):
+        self.api_client.options.since = expected_since = 18
+
+        result = self.api_client.get_since_value("alert")
+
+        self.assertEqual(result, expected_since)
+
+    def test_get_since_value_option_not_given(self):
+        expected_since = self.api_client.get_past_datetime(12)
+
+        result = self.api_client.get_since_value("alert")
+
+        self.assertEqual(result, expected_since)

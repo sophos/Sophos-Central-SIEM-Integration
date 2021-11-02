@@ -227,12 +227,6 @@ class ApiClient:
         )
 
         since = False
-        if self.options.since:
-            since = self.options.since
-            self.log("Retrieving results since: %s" % since)
-        else:
-            self.log("No datetime found, defaulting to last 12 hours for results")
-            since = self.get_past_datetime(12)
 
         if (
             self.config.client_id
@@ -320,6 +314,7 @@ class ApiClient:
             params["cursor"] = self.state_data["account"][token_val][state_data_key]
             self.jitter()
         else:
+            since = self.get_since_value(endpoint_name)
             params["from_date"] = since
 
 
@@ -369,6 +364,7 @@ class ApiClient:
             params["cursor"] = self.state_data["tenants"][tenant_id][state_data_key]
             self.jitter()
         else:
+            since = self.get_since_value(endpoint_name)
             params["from_date"] = since
 
 
@@ -399,6 +395,17 @@ class ApiClient:
             else:
                 params["cursor"] = events["next_cursor"]
                 params.pop("from_date", None)
+
+    def get_since_value(self, endpoint_name):
+        """Get the since time from options if provided else take default"""
+        since = 12
+        if self.options.since:
+            since = self.options.since
+            self.log("Retrieving results since: %s" % since)
+        else:
+            self.log("No datetime found for %s, defaulting to last 12 hours for results" % endpoint_name)
+            since = self.get_past_datetime(12)
+        return since
 
     def get_tenants_from_sophos(self):
         """Fetch the tenants for partner or organization.
@@ -535,7 +542,7 @@ class ApiClient:
             raise Exception(
                 f"When using {whoami_response['idType']} credentials, you must specify the tenant id in config.ini"
             )
-            
+
         tenant = {}
         try:
             if whoami_response["idType"] == "organization":
@@ -548,7 +555,7 @@ class ApiClient:
                     "Authorization": "Bearer " + access_token,
                     "X-Partner-ID": whoami_response["id"],
                 }
-                
+
             tenant_url = (
                 whoami_response["apiHosts"]["global"]
                 + "/"
@@ -560,7 +567,7 @@ class ApiClient:
 
             self.log("Tenant response: %s" % (tenant_response))
             return json.loads(tenant_response)
-                
+
         except json.decoder.JSONDecodeError as e:
             self.log(f"Sophos {whoami_response['idType']} tenant API response not in json format")
             return {"error": e}
