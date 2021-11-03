@@ -236,7 +236,7 @@ class ApiClient:
 
             if "id" in tenant_obj:
                 results = self.make_credentials_request(
-                    since, endpoint_name, tenant_obj
+                   endpoint_name, tenant_obj
                 )
             else:
                 self.log("Error :: %s" % tenant_obj["error"])
@@ -244,7 +244,7 @@ class ApiClient:
         else:
             token_data = config.Token(self.config.token_info)
             results = self.make_token_request(
-                since, endpoint_name, token_data
+                endpoint_name, token_data
             )
         return results
 
@@ -285,10 +285,9 @@ class ApiClient:
             args = "&".join(["%s=%s" % (k, v) for k, v in params.items()])
         return args
 
-    def make_token_request(self, since, endpoint_name, token):
+    def make_token_request(self, endpoint_name, token):
         """Make alerts/events request by using token info.
         Arguments:
-            since {number}: Return results from specified time
             endpoint_name {string}: endpoint name
             token {string} -- token
         Returns:
@@ -314,8 +313,7 @@ class ApiClient:
             params["cursor"] = self.state_data["account"][token_val][state_data_key]
             self.jitter()
         else:
-            since = self.get_since_value(endpoint_name)
-            params["from_date"] = since
+            params["from_date"] = self.get_since_value(endpoint_name)
 
 
         while True:
@@ -339,10 +337,9 @@ class ApiClient:
                 params["cursor"] = events["next_cursor"]
                 params.pop("from_date", None)
 
-    def make_credentials_request(self, since, endpoint_name, tenant_obj):
+    def make_credentials_request(self, endpoint_name, tenant_obj):
         """Make alerts/events request by using API credentials.
         Arguments:
-            since {number}: Return results from specified time
             endpoint_name {string}: endpoint name
             tenant_obj {object} -- tenant object
         Returns:
@@ -364,8 +361,7 @@ class ApiClient:
             params["cursor"] = self.state_data["tenants"][tenant_id][state_data_key]
             self.jitter()
         else:
-            since = self.get_since_value(endpoint_name)
-            params["from_date"] = since
+            params["from_date"] = self.get_since_value(endpoint_name)
 
 
         while True:

@@ -263,11 +263,11 @@ class TestApiClient(unittest.TestCase):
         self.api_client.state.save_state = MagicMock()
         self.api_client.call_endpoint = MagicMock()
         self.api_client.call_endpoint.return_value = mock_response
-        response = self.api_client.make_token_request(False, "events", MagicMock())
+        response = self.api_client.make_token_request("events", MagicMock())
         self.assertEqual(list(response), mock_response["items"])
 
         self.api_client.call_endpoint.return_value = mock_empty_items_response
-        response = self.api_client.make_token_request(False, "events", MagicMock())
+        response = self.api_client.make_token_request("events", MagicMock())
         self.assertEqual(list(response), mock_empty_items_response["items"])
 
     def test_make_credentials_request(self):
@@ -316,19 +316,19 @@ class TestApiClient(unittest.TestCase):
         self.api_client.call_endpoint = MagicMock()
         self.api_client.call_endpoint.return_value = mock_response
         response = self.api_client.make_credentials_request(
-            False, "events", tenant_response
+            "events", tenant_response
         )
         self.assertEqual(list(response), mock_response["items"])
         self.api_client.state_data = {"tenants": {"1": {"events": time.time() - 120}}}
         response = self.api_client.make_credentials_request(
-            False, "events", tenant_response
+            "events", tenant_response
         )
         self.assertEqual(list(response), mock_response["items"])
 
 
         self.api_client.call_endpoint.return_value = mock_empty_items_response
         response = self.api_client.make_credentials_request(
-            False, "events", tenant_response
+            "events", tenant_response
         )
         self.assertEqual(list(response), mock_empty_items_response["items"])
 
