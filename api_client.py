@@ -226,8 +226,6 @@ class ApiClient:
             % (self.endpoint, self.config.filename, self.config.format)
         )
 
-        since = False
-
         if (
             self.config.client_id
             and self.config.client_secret
