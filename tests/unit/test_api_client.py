@@ -134,8 +134,8 @@ class TestApiClient(unittest.TestCase):
             "items": [],
         }
         mock_tenant_response = {
-            "id": 1, 
-            "idType": "test", 
+            "id": 1,
+            "idType": "test",
             "apiHost": "http://localhost",
             "name": "test tenant",
             "dataRegion": "test",
@@ -263,11 +263,11 @@ class TestApiClient(unittest.TestCase):
         self.api_client.state.save_state = MagicMock()
         self.api_client.call_endpoint = MagicMock()
         self.api_client.call_endpoint.return_value = mock_response
-        response = self.api_client.make_token_request(False, "events", MagicMock())
+        response = self.api_client.make_token_request("events", MagicMock())
         self.assertEqual(list(response), mock_response["items"])
 
         self.api_client.call_endpoint.return_value = mock_empty_items_response
-        response = self.api_client.make_token_request(False, "events", MagicMock())
+        response = self.api_client.make_token_request("events", MagicMock())
         self.assertEqual(list(response), mock_empty_items_response["items"])
 
     def test_make_credentials_request(self):
@@ -275,7 +275,7 @@ class TestApiClient(unittest.TestCase):
             "access_token": "test_access_token",
             "has_more": False,
             "next_cursor": "TEST1VSU09SfDITESTETSTETtMDFUMTg6MjU6NDEuNjA2Wg==",
-            "id": "1", 
+            "id": "1",
             "apiHost": "http://localhost",
             "name": "test tenant",
             "dataGeography": "TE",
@@ -316,19 +316,19 @@ class TestApiClient(unittest.TestCase):
         self.api_client.call_endpoint = MagicMock()
         self.api_client.call_endpoint.return_value = mock_response
         response = self.api_client.make_credentials_request(
-            False, "events", tenant_response
+            "events", tenant_response
         )
         self.assertEqual(list(response), mock_response["items"])
         self.api_client.state_data = {"tenants": {"1": {"events": time.time() - 120}}}
         response = self.api_client.make_credentials_request(
-            False, "events", tenant_response
+            "events", tenant_response
         )
         self.assertEqual(list(response), mock_response["items"])
 
 
         self.api_client.call_endpoint.return_value = mock_empty_items_response
         response = self.api_client.make_credentials_request(
-            False, "events", tenant_response
+            "events", tenant_response
         )
         self.assertEqual(list(response), mock_empty_items_response["items"])
 
@@ -486,3 +486,17 @@ class TestApiClient(unittest.TestCase):
             "When using partner credentials, you must specify the tenant id in config.ini"
             in str(context.exception)
         )
+
+    def test_get_since_value_option_given(self):
+        self.api_client.options.since = expected_since = 18
+
+        result = self.api_client.get_since_value("alert")
+
+        self.assertEqual(result, expected_since)
+
+    def test_get_since_value_option_not_given(self):
+        expected_since = self.api_client.get_past_datetime(12)
+
+        result = self.api_client.get_since_value("alert")
+
+        self.assertEqual(result, expected_since)

@@ -226,14 +226,6 @@ class ApiClient:
             % (self.endpoint, self.config.filename, self.config.format)
         )
 
-        since = False
-        if self.options.since:
-            since = self.options.since
-            self.log("Retrieving results since: %s" % since)
-        else:
-            self.log("No datetime found, defaulting to last 12 hours for results")
-            since = self.get_past_datetime(12)
-
         if (
             self.config.client_id
             and self.config.client_secret
@@ -242,7 +234,7 @@ class ApiClient:
 
             if "id" in tenant_obj:
                 results = self.make_credentials_request(
-                    since, endpoint_name, tenant_obj
+                   endpoint_name, tenant_obj
                 )
             else:
                 self.log("Error :: %s" % tenant_obj["error"])
@@ -250,7 +242,7 @@ class ApiClient:
         else:
             token_data = config.Token(self.config.token_info)
             results = self.make_token_request(
-                since, endpoint_name, token_data
+                endpoint_name, token_data
             )
         return results
 
@@ -291,10 +283,9 @@ class ApiClient:
             args = "&".join(["%s=%s" % (k, v) for k, v in params.items()])
         return args
 
-    def make_token_request(self, since, endpoint_name, token):
+    def make_token_request(self, endpoint_name, token):
         """Make alerts/events request by using token info.
         Arguments:
-            since {number}: Return results from specified time
             endpoint_name {string}: endpoint name
             token {string} -- token
         Returns:
@@ -320,7 +311,7 @@ class ApiClient:
             params["cursor"] = self.state_data["account"][token_val][state_data_key]
             self.jitter()
         else:
-            params["from_date"] = since
+            params["from_date"] = self.get_since_value(endpoint_name)
 
 
         while True:
@@ -344,10 +335,9 @@ class ApiClient:
                 params["cursor"] = events["next_cursor"]
                 params.pop("from_date", None)
 
-    def make_credentials_request(self, since, endpoint_name, tenant_obj):
+    def make_credentials_request(self, endpoint_name, tenant_obj):
         """Make alerts/events request by using API credentials.
         Arguments:
-            since {number}: Return results from specified time
             endpoint_name {string}: endpoint name
             tenant_obj {object} -- tenant object
         Returns:
@@ -369,7 +359,7 @@ class ApiClient:
             params["cursor"] = self.state_data["tenants"][tenant_id][state_data_key]
             self.jitter()
         else:
-            params["from_date"] = since
+            params["from_date"] = self.get_since_value(endpoint_name)
 
 
         while True:
@@ -399,6 +389,17 @@ class ApiClient:
             else:
                 params["cursor"] = events["next_cursor"]
                 params.pop("from_date", None)
+
+    def get_since_value(self, endpoint_name):
+        """Get the since time from options if provided else take default"""
+        since = 12
+        if self.options.since:
+            since = self.options.since
+            self.log("Retrieving results since: %s" % since)
+        else:
+            self.log("No datetime found for %s, defaulting to last 12 hours for results" % endpoint_name)
+            since = self.get_past_datetime(12)
+        return since
 
     def get_tenants_from_sophos(self):
         """Fetch the tenants for partner or organization.
@@ -535,7 +536,7 @@ class ApiClient:
             raise Exception(
                 f"When using {whoami_response['idType']} credentials, you must specify the tenant id in config.ini"
             )
-            
+
         tenant = {}
         try:
             if whoami_response["idType"] == "organization":
@@ -548,7 +549,7 @@ class ApiClient:
                     "Authorization": "Bearer " + access_token,
                     "X-Partner-ID": whoami_response["id"],
                 }
-                
+
             tenant_url = (
                 whoami_response["apiHosts"]["global"]
                 + "/"
@@ -560,7 +561,7 @@ class ApiClient:
 
             self.log("Tenant response: %s" % (tenant_response))
             return json.loads(tenant_response)
-                
+
         except json.decoder.JSONDecodeError as e:
             self.log(f"Sophos {whoami_response['idType']} tenant API response not in json format")
             return {"error": e}
