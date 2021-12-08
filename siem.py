@@ -28,7 +28,6 @@ VERSION = "2.0.1"
 QUIET = False
 MISSING_VALUE = "NA"
 DEFAULT_ENDPOINT = "event"
-SKIP_DHOST = False
 
 SEVERITY_MAP = {"none": 0, "low": 1, "medium": 5, "high": 8, "very_high": 10}
 
@@ -72,14 +71,14 @@ SIEM_LOGGER.propagate = False
 logging.basicConfig(format="%(message)s")
 
 
-def is_valid_hostname(hostname):
-    if len(hostname) > 255:
-        return False
-    if hostname[-1] == ".":
-        hostname = hostname[:-1] # strip exactly one dot from the right, if present
-    allowed = re.compile("(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
-    return all(allowed.match(x) for x in hostname.split("."))
-    
+def is_valid_fqdn(fqdn):
+    fqdn = fqdn.strip()
+    fqdn = fqdn[:-1] if fqdn.endswith(".") else fqdn  # chomp trailing period
+    return fqdn and len(fqdn) < 256 and all(part and len(part) < 64 and re.match(r"^[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*$", part) for part in fqdn.split("."))
+
+def convert_to_valid_fqdn(value):
+    return ".".join([re.sub("[^-a-z0-9]+", "-", x.strip()).strip("-") for x in value.lower().split(".") if x.strip()])
+
 def write_json_format(results):
     """Write JSON format data.
     Arguments:
@@ -227,8 +226,10 @@ def update_cef_keys(data):
     # Replace if there is a mapped CEF key
     for key, value in list(data.items()):
         new_key = CEF_MAPPING.get(key, key)
-        if new_key == key  or (SKIP_DHOST and new_key == "dhost" and not is_valid_hostname(value)):
+        if new_key == key:
             continue
+        if new_key == "dhost" and not is_valid_fqdn(value):
+            value = convert_to_valid_fqdn(value)
         data[new_key] = value
         del data[key]
 
@@ -269,7 +270,6 @@ def parse_args_options():
         options {dict}: options data
     """
     global QUIET
-    global SKIP_DHOST
     if "SOPHOS_SIEM_HOME" in os.environ:
         app_path = os.environ["SOPHOS_SIEM_HOME"]
     else:
@@ -326,13 +326,6 @@ def parse_args_options():
         action="store_true",
         help="Suppress status messages",
     )
-    parser.add_option(
-        "--skip_dhost",
-        default=False,
-        action="store_true",
-        help="skip the dhost mapping if skip_dhost argument passed, "
-        "and not found valid host value in location key",
-    )
 
     options, args = parser.parse_args()
 
@@ -344,8 +337,6 @@ def parse_args_options():
         sys.exit(0)
     if options.quiet:
         QUIET = True
-    if options.skip_dhost:
-        SKIP_DHOST = True
 
     return options
 

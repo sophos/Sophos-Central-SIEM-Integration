@@ -20,7 +20,6 @@
 
 import os
 import siem
-import sys
 import unittest
 
 from mock import MagicMock
@@ -113,6 +112,9 @@ class TestSiem(unittest.TestCase):
         self.assertEqual(same_key_value_data, {"name": "test_name"})
         siem.update_cef_keys(different_key_value_data)
         self.assertEqual(different_key_value_data, {"type": "test_type"})
+        invalid_host_key_value_data = {"location": "John's MacBook"}
+        siem.update_cef_keys(invalid_host_key_value_data)
+        self.assertEqual(invalid_host_key_value_data, {"dhost": "john-s-macbook"})
 
     def test_format_cef(self):
         data = {
@@ -200,3 +202,52 @@ class TestSiem(unittest.TestCase):
             "Invalid endpoint in config.ini, endpoint can be event, alert or all"
             in str(context.exception)
         )
+
+    def test_is_valid_fqdn(self):
+        valid = [
+            ("foo.com",                         "dot separated alpha"),
+            ("  foo.com",                       "leading space is stripped"),
+            ("foo.bar  ",                       "trailing space is stripped"),
+            ("FOO.bar",                         "case doesn't matter"),
+            ("foo.tld.",                        "trailing dot allowed"),
+            ("a",                               "min length"),
+            ("a-b",                             "min with hyphen"),
+            ("f11-bar.baz-w1BBle",              "alphanum parts can be hyphenated"),
+            ("f11-bar.baz-w1BBle-Quux",         "multiple hyphens allowed in a part"),
+            ("a" * 63 + ("." + ("a" * 63)) * 3, "max length 255; max part length 63"),
+        ]
+
+        for fqdn, message in valid:
+            self.assertTrue(siem.is_valid_fqdn(fqdn), f"Check is valid fqdn {fqdn} ({message})")
+
+        invalid = [
+            ("",                                    "can't be empty"),
+            (" ",                                   "can't be whitespace"),
+            ("a" * 64,                              "max part length should be 63"),
+            ("a" * 63 + ("." + ("a" * 63)) * 4 ,    "max length should be 255"),
+            ("f22-.abc",                            "hyphen must be in middle of alphanum part"),
+        ]
+        for fqdn, message in invalid:
+            self.assertFalse(siem.is_valid_fqdn(fqdn), f"Check invalid fqdn {fqdn} ({message})")
+
+    def test_convert_to_valid_fqdn(self):
+        needs_fixing = [
+            ("Foo.com", "foo.com", "lowercase"),
+            ("foo.bar.", "foo.bar", "trailing dot is removed"),
+            ("foo..bar....baz", "foo.bar.baz", "multiple dots are replaced with one"),
+            ("foo&!(12.baz", "foo-12.baz", "multiple non alphanum chars are replaced with a hyphen"),
+            ("foo&!(.baz", "foo.baz", "no trailing hyphen in part after replacement"),
+        ]
+        for fqdn, fixed, message in needs_fixing:
+            self.assertEqual(fixed, siem.convert_to_valid_fqdn(fqdn), f"Check conversion {fqdn} ({message})")
+            self.assertTrue(siem.is_valid_fqdn(fixed))
+
+        already_good = [
+            "a",
+            "foo",
+            "foo-bar",
+            "foo-bar.baz-wibble",
+            "foo-bar.baz-wibble-quux",
+        ]
+        for fqdn in already_good:
+            self.assertEqual(fqdn, siem.convert_to_valid_fqdn(fqdn), f"Check doesn't need conversion {fqdn}")
