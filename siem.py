@@ -71,6 +71,14 @@ SIEM_LOGGER.propagate = False
 logging.basicConfig(format="%(message)s")
 
 
+def is_valid_fqdn(fqdn):
+    fqdn = fqdn.strip()
+    fqdn = fqdn[:-1] if fqdn.endswith(".") else fqdn  # chomp trailing period
+    return fqdn and len(fqdn) < 256 and all(part and len(part) < 64 and re.match(r"^[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*$", part) for part in fqdn.split("."))
+
+def convert_to_valid_fqdn(value):
+    return ".".join([re.sub("[^-a-z0-9]+", "-", x.strip()).strip("-") for x in value.lower().split(".") if x.strip()])
+
 def write_json_format(results):
     """Write JSON format data.
     Arguments:
@@ -220,6 +228,8 @@ def update_cef_keys(data):
         new_key = CEF_MAPPING.get(key, key)
         if new_key == key:
             continue
+        if new_key == "dhost" and not is_valid_fqdn(value):
+            value = convert_to_valid_fqdn(value)
         data[new_key] = value
         del data[key]
 
