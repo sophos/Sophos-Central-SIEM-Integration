@@ -1,7 +1,20 @@
-#v2.0.1
+# v2.1.0
+
+This release contains the following fixes:
+
+* Fix JSON output to emit one object per line [#52](https://github.com/sophos/Sophos-Central-SIEM-Integration/issues/52)
+* Remove empty lines from JSON output [#37](https://github.com/sophos/Sophos-Central-SIEM-Integration/issues/37)
+* Resolve issue seen with duplicate events [#50](https://github.com/sophos/Sophos-Central-SIEM-Integration/issues/50)
+* Fix `dhost` in CEF output to make it valid [#18](https://github.com/sophos/Sophos-Central-SIEM-Integration/issues/18)
+
+**Full Changelog**: https://github.com/sophos/Sophos-Central-SIEM-Integration/compare/v2.0.1...2.1
+
+# v2.0.1
+
 1. Added check for minimum supported Python version.
 
 # v2.0.0
+
 1. New JWT-based authentication for the SIEM API
 - You can now use Sophos Central public [API credentials](https://developer.sophos.com/getting-started) to sync alerts and events from the SIEM API.
 - Add `client_id` and `client_secret` to config.ini.
@@ -16,7 +29,9 @@
 - You now need Python 3.6+ to use this tool.
 
 # v1.1.0
+
 ## New Features
+
 1. ****Added a “datastream” text identifier to each object in the API output to distinguish between events and alerts****
 - Example:
 ***_alert output_***
