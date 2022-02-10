@@ -19,6 +19,7 @@ import urllib.error as urlerror
 from urllib.parse import urlencode
 
 import datetime
+import base64
 import json
 import logging
 import logging.handlers
@@ -313,6 +314,7 @@ class ApiClient:
         else:
             params["from_date"] = self.get_since_value(endpoint_name)
 
+        log_data_upto = datetime.datetime.utcnow() - datetime.timedelta(seconds=float(self.config.collection_delay))
 
         while True:
             args = self.get_alerts_or_events_req_args(params)
@@ -320,19 +322,25 @@ class ApiClient:
 
             if "items" in events and len(events["items"]) > 0:
                 for e in events["items"]:
-                    e["datastream"] = EVENT_TYPE if (self.endpoint == EVENTS_V1) else ALERT_TYPE
-                    yield e
+                    timestamp = datetime.datetime.strptime(e['when'], '%Y-%m-%dT%H:%M:%S.%fZ')
+                    if timestamp<=log_data_upto:
+                        e["datastream"] = EVENT_TYPE if (self.endpoint == EVENTS_V1) else ALERT_TYPE
+                        yield e
+                    # else within last buffer delay time, we'll log those events on next call
             else:
                 self.log(
                     "No new %s data retrieved from the API"
                     % endpoint_name
                 )
+            cursor_from_api_response = base64.b64decode(events["next_cursor"]).decode('ascii')
+            cursor_version = cursor_from_api_response.split("|")[0]   # usually V2_CURSOR
+            next_cursor = base64.b64encode('{}|{}Z'.format(cursor_version, log_data_upto.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]).encode('ascii')).decode('ascii')
             data_key = "account." + token_val + "." + state_data_key
-            self.state.save_state(data_key, events["next_cursor"])
+            self.state.save_state(data_key, next_cursor)
             if not events["has_more"]:
                 break
             else:
-                params["cursor"] = events["next_cursor"]
+                params["cursor"] = next_cursor
                 params.pop("from_date", None)
 
     def make_credentials_request(self, endpoint_name, tenant_obj):
