@@ -28,7 +28,7 @@ import name_mapping
 from random import randint
 import time
 import config
-
+import base64
 
 SYSLOG_SOCKTYPE = {"udp": socket.SOCK_DGRAM, "tcp": socket.SOCK_STREAM}
 
@@ -313,6 +313,7 @@ class ApiClient:
         else:
             params["from_date"] = self.get_since_value(endpoint_name)
 
+        log_data_upto = datetime.datetime.utcnow() - datetime.timedelta(seconds=float(self.config.collection_delay))
 
         while True:
             args = self.get_alerts_or_events_req_args(params)
@@ -320,20 +321,26 @@ class ApiClient:
 
             if "items" in events and len(events["items"]) > 0:
                 for e in events["items"]:
-                    e["datastream"] = EVENT_TYPE if (self.endpoint == EVENTS_V1) else ALERT_TYPE
-                    yield e
+                    timestamp = datetime.datetime.strptime(e['when'], '%Y-%m-%dT%H:%M:%S.%fZ')
+                    if timestamp<=log_data_upto:
+                        e["datastream"] = EVENT_TYPE if (self.endpoint == EVENTS_V1) else ALERT_TYPE
+                        yield e
             else:
                 self.log(
                     "No new %s data retrieved from the API"
                     % endpoint_name
                 )
             data_key = "account." + token_val + "." + state_data_key
-            self.state.save_state(data_key, events["next_cursor"])
+
             if not events["has_more"]:
+                v2_cursor = 'V2_CURSOR|{}Z'.format(log_data_upto.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3])
+                next_cursor = base64.b64encode(v2_cursor.encode()).decode()
                 break
             else:
-                params["cursor"] = events["next_cursor"]
+                next_cursor = events["next_cursor"]
+                params["cursor"] = next_cursor
                 params.pop("from_date", None)
+        self.state.save_state(data_key, next_cursor)
 
     def make_credentials_request(self, endpoint_name, tenant_obj):
         """Make alerts/events request by using API credentials.
@@ -361,6 +368,7 @@ class ApiClient:
         else:
             params["from_date"] = self.get_since_value(endpoint_name)
 
+        log_data_upto = datetime.datetime.utcnow() - datetime.timedelta(seconds=float(self.config.collection_delay))
 
         while True:
             args = self.get_alerts_or_events_req_args(params)
@@ -368,10 +376,12 @@ class ApiClient:
             events = self.call_endpoint(data_region_url, default_headers, args)
             if "items" in events and len(events["items"]) > 0:
                 for e in events["items"]:
-                    e["datastream"] = (
-                        EVENT_TYPE if (self.endpoint == EVENTS_V1) else ALERT_TYPE
-                    )
-                    yield e
+                    timestamp = datetime.datetime.strptime(e['when'], '%Y-%m-%dT%H:%M:%S.%fZ')
+                    if timestamp<=log_data_upto:
+                        e["datastream"] = (
+                            EVENT_TYPE if (self.endpoint == EVENTS_V1) else ALERT_TYPE
+                        )
+                        yield e
             else:
                 self.log(
                     "No new %s data retrieved from the API"
@@ -381,14 +391,19 @@ class ApiClient:
             data_region_url_key = "tenants." + tenant_id + ".dataRegionUrl"
             last_run_key = "tenants." + tenant_id + ".lastRunAt"
 
-            self.state.save_state(cursor_key, events["next_cursor"])
-            self.state.save_state(data_region_url_key, data_region_url)
-            self.state.save_state(last_run_key, time.time())
             if not events["has_more"]:
+                v2_cursor = 'V2_CURSOR|{}Z'.format(log_data_upto.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3])
+                next_cursor = base64.b64encode(v2_cursor.encode()).decode()
+                params["cursor"] = next_cursor
                 break
             else:
-                params["cursor"] = events["next_cursor"]
+                next_cursor = events["next_cursor"]
+                params["cursor"] = next_cursor
                 params.pop("from_date", None)
+            
+        self.state.save_state(cursor_key, next_cursor)
+        self.state.save_state(data_region_url_key, data_region_url)
+        self.state.save_state(last_run_key, time.time())
 
     def get_since_value(self, endpoint_name):
         """Get the since time from options if provided else take default"""
