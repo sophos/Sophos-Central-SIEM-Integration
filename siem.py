@@ -22,6 +22,7 @@ from optparse import OptionParser
 import name_mapping
 import config
 import api_client
+import socket
 import vercheck
 
 VERSION = "2.0.1"
@@ -79,6 +80,14 @@ def is_valid_fqdn(fqdn):
 def convert_to_valid_fqdn(value):
     return ".".join([re.sub("[^-a-z0-9]+", "-", x.strip()).strip("-") for x in value.lower().split(".") if x.strip()])
 
+_log_Separator = None
+def get_log_line_separator():
+    global _log_Separator
+    if _log_Separator == None:
+        tcp_handlers = [ handler for handler in SIEM_LOGGER.handlers if isinstance(handler, logging.handlers.SysLogHandler) and handler.socktype == socket.SOCK_STREAM ]
+        _log_Separator = "\n" if len(tcp_handlers) > 0 else ""
+    return _log_Separator
+
 def write_json_format(results):
     """Write JSON format data.
     Arguments:
@@ -88,7 +97,7 @@ def write_json_format(results):
         i = remove_null_values(i)
         update_cef_keys(i)
         name_mapping.update_fields(log, i)
-        SIEM_LOGGER.info(json.dumps(i, ensure_ascii=False).strip())
+        SIEM_LOGGER.info(json.dumps(i, ensure_ascii=False).strip() + get_log_line_separator())
 
 
 def write_keyvalue_format(results):
@@ -109,7 +118,7 @@ def write_keyvalue_format(results):
                     date,
                 ]
                 + events
-            ).strip()
+            ).strip() + get_log_line_separator()
         )
 
 
@@ -121,7 +130,7 @@ def write_cef_format(results):
     for i in results:
         i = remove_null_values(i)
         name_mapping.update_fields(log, i)
-        SIEM_LOGGER.info(format_cef(flatten_json(i)).strip())
+        SIEM_LOGGER.info(format_cef(flatten_json(i)).strip() + get_log_line_separator())
 
 
 # Flattening JSON objects in Python
@@ -372,17 +381,17 @@ def get_alerts_or_events(endpoint, options, config, state):
         config {dict}: config file details
         state {dict}: state file details
     """
-    api_client_obj = api_client.ApiClient(endpoint, options, config, state)
-    results = api_client_obj.get_alerts_or_events()
-
     if config.format == "json":
-        write_json_format(results)
+        write = write_json_format
     elif config.format == "keyvalue":
-        write_keyvalue_format(results)
+        write = write_keyvalue_format
     elif config.format == "cef":
-        write_cef_format(results)
+        write = write_cef_format
     else:
-        write_json_format(results)
+        write = write_json_format
+
+    api_client_obj = api_client.ApiClient(endpoint, options, config, state)
+    api_client_obj.get_alerts_or_events(write)
 
 def run(options, config_data, state):
     """ Call the fetch alerts/events method
