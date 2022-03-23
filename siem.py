@@ -24,7 +24,7 @@ import config
 import api_client
 import vercheck
 
-VERSION = "2.0.1"
+VERSION = "2.1.0"
 QUIET = False
 MISSING_VALUE = "NA"
 DEFAULT_ENDPOINT = "event"
