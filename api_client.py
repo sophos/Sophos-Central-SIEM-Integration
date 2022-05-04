@@ -160,6 +160,7 @@ class ApiClient:
             logging_handler = logging.FileHandler(
                 os.path.join(logdir, self.config.filename), "a", encoding="utf-8"
             )
+        logging_handler.append_nul = self.config.append_nul == "true"
         SIEM_LOGGER.addHandler(logging_handler)
 
     def get_past_datetime(self, hours):
@@ -263,7 +264,7 @@ class ApiClient:
         events = json.loads(events_response)
         return events
 
-    def get_alerts_or_events_req_args(self, params):
+    def get_alerts_or_events_req_args(self, params, endpoint_name):
         """Convert the params to query string
         Arguments:
             params {dict}: params object
@@ -281,6 +282,7 @@ class ApiClient:
             )
         else:
             args = "&".join(["%s=%s" % (k, v) for k, v in params.items()])
+        args+='&from_date_offset_minutes='+str(self.config.events_from_date_offset_minutes if endpoint_name=="events" else self.config.alerts_from_date_offset_minutes)
         return args
 
     def make_token_request(self, endpoint_name, token):
@@ -315,7 +317,7 @@ class ApiClient:
 
 
         while True:
-            args = self.get_alerts_or_events_req_args(params)
+            args = self.get_alerts_or_events_req_args(params, endpoint_name)
             events = self.call_endpoint(token.url, default_headers, args)
 
             if "items" in events and len(events["items"]) > 0:
@@ -363,7 +365,7 @@ class ApiClient:
 
 
         while True:
-            args = self.get_alerts_or_events_req_args(params)
+            args = self.get_alerts_or_events_req_args(params, endpoint_name)
             data_region_url = tenant_obj["apiHost"] if "idType" not in tenant_obj else tenant_obj["apiHosts"]["dataRegion"]
             events = self.call_endpoint(data_region_url, default_headers, args)
             if "items" in events and len(events["items"]) > 0:
