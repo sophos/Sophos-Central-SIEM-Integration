@@ -64,7 +64,7 @@ CEF_MAPPING = {
     "location": "dhost",
 }
 
-CONVERT_DHOST_TO_VALID_FQDN = True
+CONVERT_DHOST_FIELD_TO_VALID_FQDN = True
 
 # Initialize the SIEM_LOGGER
 SIEM_LOGGER = logging.getLogger("SIEM")
@@ -230,7 +230,7 @@ def update_cef_keys(data):
         new_key = CEF_MAPPING.get(key, key)
         if new_key == key:
             continue
-        if CONVERT_DHOST_TO_VALID_FQDN and new_key == "dhost" and not is_valid_fqdn(value):
+        if CONVERT_DHOST_FIELD_TO_VALID_FQDN and new_key == "dhost" and not is_valid_fqdn(value):
             value = convert_to_valid_fqdn(value)
         data[new_key] = value
         del data[key]
@@ -408,8 +408,8 @@ def run(options, config_data, state):
 def main():
     options = parse_args_options()
     config_data = load_config(options.config)
-    global CONVERT_DHOST_TO_VALID_FQDN
-    CONVERT_DHOST_TO_VALID_FQDN = config_data.convert_dhost_to_valid_fqdn.lower() == "true"
+    global CONVERT_DHOST_FIELD_TO_VALID_FQDN
+    CONVERT_DHOST_FIELD_TO_VALID_FQDN = config_data.convert_dhost_field_to_valid_fqdn.lower() == "true"
     state_data = state.State(options, config_data.state_file_path)
     run(options, config_data, state_data)
 
