@@ -12,7 +12,7 @@
 
 """
  Unit tests for Sophos SIEM Client.
- 
+
  Requirements
   - Python 3.6+ (ActivePython recommended on Windows)
 """

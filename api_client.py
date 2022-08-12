@@ -569,4 +569,3 @@ class ApiClient:
             raise Exception(
                     f"Error getting tenant {self.config.tenant_id}, {e}"
             )
-            
