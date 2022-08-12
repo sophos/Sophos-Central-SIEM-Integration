@@ -12,7 +12,7 @@
 
 """
  Unit tests for Sophos SIEM Client.
-
+ 
  Requirements
   - Python 3.6+ (ActivePython recommended on Windows)
 """
@@ -55,9 +55,6 @@ class Config:
         self.token_info = ""
         self.auth_url = ""
         self.api_host = ""
-        self.append_nul = False
-        self.events_from_date_offset_minutes = 0
-        self.alerts_from_date_offset_minutes = 0
 
 
 class TestApiClient(unittest.TestCase):
@@ -223,17 +220,14 @@ class TestApiClient(unittest.TestCase):
     def test_get_alerts_or_events_req_args(self):
         self.api_client.options.light = True
         params = {"limit": 1000, "cursor": False}
-        response = self.api_client.get_alerts_or_events_req_args(params, "events")
+        response = self.api_client.get_alerts_or_events_req_args(params)
         self.assertIn(
             "limit=1000&cursor=False&exclude_types=Event::Endpoint::NonCompliant",
             response,
         )
         self.api_client.options.light = False
-        response = self.api_client.get_alerts_or_events_req_args(params, "events")
-        self.assertEqual(response, "limit=1000&cursor=False&from_date_offset_minutes=0")
-
-        response = self.api_client.get_alerts_or_events_req_args(params, "alerts")
-        self.assertEqual(response, "limit=1000&cursor=False&from_date_offset_minutes=0")
+        response = self.api_client.get_alerts_or_events_req_args(params)
+        self.assertEqual(response, "limit=1000&cursor=False")
 
     def test_make_token_request(self):
         mock_response = {
