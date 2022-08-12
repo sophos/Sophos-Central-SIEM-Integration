@@ -160,7 +160,8 @@ class ApiClient:
             logging_handler = logging.FileHandler(
                 os.path.join(logdir, self.config.filename), "a", encoding="utf-8"
             )
-        SIEM_LOGGER.addHandler(logging_handler)
+        if not SIEM_LOGGER.handlers:
+            SIEM_LOGGER.addHandler(logging_handler)
 
     def get_past_datetime(self, hours):
         """Get the past datetime based on hours argument
