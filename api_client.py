@@ -282,7 +282,11 @@ class ApiClient:
             )
         else:
             args = "&".join(["%s=%s" % (k, v) for k, v in params.items()])
-        args+='&from_date_offset_minutes='+str(self.config.events_from_date_offset_minutes if endpoint_name=="events" else self.config.alerts_from_date_offset_minutes)
+            
+        from_date_offset_minutes = self.config.alerts_from_date_offset_minutes
+        if endpoint_name=="events":
+            from_date_offset_minutes = self.config.events_from_date_offset_minutes
+        args+='&from_date_offset_minutes='+str(from_date_offset_minutes)
         return args
 
     def make_token_request(self, endpoint_name, token):
