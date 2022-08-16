@@ -64,8 +64,6 @@ CEF_MAPPING = {
     "location": "dhost",
 }
 
-CONVERT_DHOST_FIELD_TO_VALID_FQDN = True
-
 # Initialize the SIEM_LOGGER
 SIEM_LOGGER = logging.getLogger("SIEM")
 SIEM_LOGGER.setLevel(logging.INFO)
@@ -81,26 +79,26 @@ def is_valid_fqdn(fqdn):
 def convert_to_valid_fqdn(value):
     return ".".join([re.sub("[^-a-z0-9]+", "-", x.strip()).strip("-") for x in value.lower().split(".") if x.strip()])
 
-def write_json_format(results):
+def write_json_format(results, config):
     """Write JSON format data.
     Arguments:
         results {list}: data
     """
     for i in results:
         i = remove_null_values(i)
-        update_cef_keys(i)
+        update_cef_keys(i, config)
         name_mapping.update_fields(log, i)
         SIEM_LOGGER.info(json.dumps(i, ensure_ascii=False).strip())
 
 
-def write_keyvalue_format(results):
+def write_keyvalue_format(results, config):
     """Write key value format data.
     Arguments:
         results {dict}: results
     """
     for i in results:
         i = remove_null_values(i)
-        update_cef_keys(i)
+        update_cef_keys(i, config)
         name_mapping.update_fields(log, i)
         date = i[u"rt"]
         # TODO:  Spaces/quotes/semicolons are not escaped here, does it matter?
@@ -115,7 +113,7 @@ def write_keyvalue_format(results):
         )
 
 
-def write_cef_format(results):
+def write_cef_format(results, config):
     """Write CEF format data.
     Arguments:
         results {list}: data
@@ -123,7 +121,7 @@ def write_cef_format(results):
     for i in results:
         i = remove_null_values(i)
         name_mapping.update_fields(log, i)
-        SIEM_LOGGER.info(format_cef(flatten_json(i)).strip())
+        SIEM_LOGGER.info(format_cef(flatten_json(i), config).strip())
 
 
 # Flattening JSON objects in Python
@@ -220,7 +218,7 @@ def extract_prefix_fields(data):
     return fields
 
 
-def update_cef_keys(data):
+def update_cef_keys(data, config):
     """ Replace if there is a mapped CEF key
     Arguments:
         data {dict}: data
@@ -230,13 +228,13 @@ def update_cef_keys(data):
         new_key = CEF_MAPPING.get(key, key)
         if new_key == key:
             continue
-        if CONVERT_DHOST_FIELD_TO_VALID_FQDN and new_key == "dhost" and not is_valid_fqdn(value):
+        if config.convert_dhost_field_to_valid_fqdn.lower() == "true" and new_key == "dhost" and not is_valid_fqdn(value):
             value = convert_to_valid_fqdn(value)
         data[new_key] = value
         del data[key]
 
 
-def format_cef(data):
+def format_cef(data, config):
     """ Message CEF formatted
     Arguments:
         data {dict}: data
@@ -246,7 +244,7 @@ def format_cef(data):
     fields = extract_prefix_fields(data)
     msg = CEF_FORMAT % fields
 
-    update_cef_keys(data)
+    update_cef_keys(data, config)
     for index, (key, value) in enumerate(data.items()):
         value = format_extension(value)
         if index > 0:
@@ -378,13 +376,13 @@ def get_alerts_or_events(endpoint, options, config, state):
     results = api_client_obj.get_alerts_or_events()
 
     if config.format == "json":
-        write_json_format(results)
+        write_json_format(results, config)
     elif config.format == "keyvalue":
-        write_keyvalue_format(results)
+        write_keyvalue_format(results, config)
     elif config.format == "cef":
-        write_cef_format(results)
+        write_cef_format(results, config)
     else:
-        write_json_format(results)
+        write_json_format(results, config)
 
 def run(options, config_data, state):
     """ Call the fetch alerts/events method
@@ -408,8 +406,6 @@ def run(options, config_data, state):
 def main():
     options = parse_args_options()
     config_data = load_config(options.config)
-    global CONVERT_DHOST_FIELD_TO_VALID_FQDN
-    CONVERT_DHOST_FIELD_TO_VALID_FQDN = config_data.convert_dhost_field_to_valid_fqdn.lower() == "true"
     state_data = state.State(options, config_data.state_file_path)
     run(options, config_data, state_data)
 
