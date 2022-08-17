@@ -154,13 +154,13 @@ class ApiClient:
             logging_handler = logging.handlers.SysLogHandler(
                 address, facility, socktype
             )
+            logging_handler.append_nul = self.config.append_nul == "true"
         elif self.config.filename == "stdout":
             logging_handler = logging.StreamHandler(sys.stdout)
         else:
             logging_handler = logging.FileHandler(
                 os.path.join(logdir, self.config.filename), "a", encoding="utf-8"
             )
-        logging_handler.append_nul = self.config.append_nul == "true"
         SIEM_LOGGER.addHandler(logging_handler)
 
     def get_past_datetime(self, hours):
