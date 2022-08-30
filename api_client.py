@@ -154,6 +154,7 @@ class ApiClient:
             logging_handler = logging.handlers.SysLogHandler(
                 address, facility, socktype
             )
+            logging_handler.append_nul = self.config.append_nul == "true"
         elif self.config.filename == "stdout":
             logging_handler = logging.StreamHandler(sys.stdout)
         else:
