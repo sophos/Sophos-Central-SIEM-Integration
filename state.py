@@ -35,17 +35,7 @@ class State:
         self.create_state_dir(self.state_file)
         self.state_data = self.load_state_file()
 
-    def log(self, log_message, level=logging.INFO):
-        """Write the log.
-        Arguments:
-            log_message {string} -- log content
-        """
-        if level >= logging.ERROR: #always show errors!
-             logging.error(log_message)
-             return
-        if not self.options.quiet:
-                logging.info(log_message)
-
+  
     def create_state_dir(self, state_file):
         """Create state directory
         Arguments:
@@ -84,9 +74,9 @@ class State:
             with open(self.state_file, "rb") as f:
                 return json.load(f)
         except IOError:
-            self.log("Sophos state file not found", level=logging.ERROR)
+            logging.error("Sophos state file not found")
         except json.decoder.JSONDecodeError:
-            self.log("Sophos state file not in valid JSON format", level=logging.ERROR)
+            logging.error("Sophos state file not in valid JSON format")
             raise SystemExit()
         return {}
 
@@ -116,5 +106,5 @@ class State:
             try:
                 f.write(data)
             except Exception as e:
-                self.log(e, level=logging.ERROR)
+                logging.error(e)
                 pass
