@@ -412,7 +412,7 @@ class ApiClient:
         Returns:
             dict -- response containing either list of tenant or error
         """
-        logging.info("Fetching the tenants/customers list by calling the Sophos Cental API")
+        logging.debug("Fetching the tenants/customers list by calling the Sophos Cental API")
         response = self.get_sophos_jwt()
 
         if "access_token" in response:
@@ -459,7 +459,7 @@ class ApiClient:
         Returns:
             dict -- response containing either of jwt token or error
         """
-        logging.info("fetching access_token from sophos")
+        logging.debug("fetching access_token from sophos")
         client_id = self.config.client_id
         client_secret = self.config.client_secret
         body = {
