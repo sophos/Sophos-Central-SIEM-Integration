@@ -408,6 +408,7 @@ def run(options, config_data, state):
 def main():
     options = parse_args_options()
     config_data = load_config(options.config)
+    logging.info(config_data)
     state_data = state.State(options, config_data.state_file_path)
     run(options, config_data, state_data)
 
