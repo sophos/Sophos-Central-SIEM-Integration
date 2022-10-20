@@ -322,6 +322,7 @@ class ApiClient:
             events = self.call_endpoint(token.url, default_headers, args)
 
             if "items" in events and len(events["items"]) > 0:
+                logging.info(f"Found {len(events['items'])} new events")
                 for e in events["items"]:
                     e["datastream"] = EVENT_TYPE if (self.endpoint == EVENTS_V1) else ALERT_TYPE
                     yield e
@@ -370,6 +371,7 @@ class ApiClient:
             data_region_url = tenant_obj["apiHost"] if "idType" not in tenant_obj else tenant_obj["apiHosts"]["dataRegion"]
             events = self.call_endpoint(data_region_url, default_headers, args)
             if "items" in events and len(events["items"]) > 0:
+                logging.info(f"Retrieved {len(events['items'])} new events")
                 for e in events["items"]:
                     e["datastream"] = (
                         EVENT_TYPE if (self.endpoint == EVENTS_V1) else ALERT_TYPE
@@ -466,8 +468,9 @@ class ApiClient:
             "client_id": client_id,
             "client_secret": client_secret,
         }
-        #TODO
-        logging.debug(("body :: %s" % str(body)))
+        # NEVER LOG OUTPUT OF THE Authentication Parameters
+        # If this goes to a syslog, you will expose critical information!
+        #l.o.g.g.i.n.g.debug(("body :: %s" % str(body)))
         current_time = time.time()
         cache_client_data = (
             self.state_data["account"][client_id]
@@ -476,7 +479,10 @@ class ApiClient:
         )
 
         if cache_client_data and current_time < cache_client_data["jwtExpiresAt"]:
-            logging.debug("return token from cache :: %s" % cache_client_data["jwt"])
+            # NEVER LOG OUTPUT OF THE JWT TOKEN
+            # If this goes to a syslog, you will expose critical information!
+            #l.o.g.g.i.n.g.debug("return token from cache :: %s" % cache_client_data["jwt"])
+            logging.debug("Found existing jwt token; Reusing")
             return {"access_token": cache_client_data["jwt"]}
         else:
             try:
@@ -492,7 +498,7 @@ class ApiClient:
                     "account.%s.jwtExpiresAt" % client_id,
                     time.time() + (response_data["expires_in"] - 120),
                 )
-                logging.debug("response :: %s" % str(response_data))
+                logging.debug("Found existing jwt token; Reusing")
                 return response_data
             except json.decoder.JSONDecodeError as e:
                 logging.error("Sophos Token API response not in valid json format")
