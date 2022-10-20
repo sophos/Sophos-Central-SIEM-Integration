@@ -254,7 +254,7 @@ class ApiClient:
             events {list} -- API response
         """
         events_request_url = "%s%s?%s" % (api_host, self.endpoint, args)
-        logging.info("URL: %s" % events_request_url)
+        logging.debug("URL: %s" % events_request_url)
         events_response = self.request_url(events_request_url, None, default_headers)
         if self.options.debug:
             logging.info("RESPONSE: %s" % events_response)
