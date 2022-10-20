@@ -11,5 +11,5 @@ logging.basicConfig(
         #TODO logging.FileHandler(os.path.join(OUTPUT_DIR,"applog","rtpu_collector.log")),
         logging.StreamHandler(sys.stdout)
     ],
-    level=logging.INFO,
-    format = "%(asctime)s\t%(levelname)s\t%(funcName)s()\t%(message)s")
+    level=logging.DEBUG,
+    format = "%(asctime)s\t%(levelname)s\t%(filename)s::%(funcName)s()\t%(message)s")
