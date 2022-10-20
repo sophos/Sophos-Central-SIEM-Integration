@@ -408,7 +408,9 @@ def run(options, config_data, state):
 def main():
     options = parse_args_options()
     config_data = load_config(options.config)
-    logging.info(config_data)
+    logging.info("Logging Level is set as: "+config_data.logging_level)
+    logging.getLogger().setLevel(config_data.logging_level)
+    
     state_data = state.State(options, config_data.state_file_path)
     run(options, config_data, state_data)
 

@@ -48,3 +48,7 @@ alerts_from_date_offset_minutes = 0
 
 # Convert the dhost field to valid fqdn.
 convert_dhost_field_to_valid_fqdn = true
+
+
+#logging level
+logging_level = DEBUG
