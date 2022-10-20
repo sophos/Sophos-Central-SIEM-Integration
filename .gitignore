@@ -8,3 +8,4 @@
 venv/
 new_py*/
 orig_py*/
+config.ini
