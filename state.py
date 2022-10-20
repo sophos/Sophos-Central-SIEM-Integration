@@ -41,7 +41,7 @@ class State:
             log_message {string} -- log content
         """
         if not self.options.quiet:
-            sys.stderr.write("%s\n" % log_message)
+            logging.info(log_message)
 
     def create_state_dir(self, state_file):
         """Create state directory
