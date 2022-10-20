@@ -15,7 +15,7 @@ import sys
 import os
 import json
 from pathlib import Path
-
+import logging
 
 class State:
     def __init__(self, options, state_file):
