@@ -234,8 +234,8 @@ class ApiClient:
             )
 
         logging.info(
-            "Config endpoint=%s, filename='%s' and format='%s'"
-            % (self.endpoint, self.config.filename, self.config.format)
+            "Config endpoint=%s, filename='%s', format='%s', address='%s', socktype='%s'"
+            % (self.endpoint, self.config.filename, self.config.format, self.config.address, self.config.socktype)
         )
 
         if (
