@@ -74,7 +74,7 @@ class State:
             with open(self.state_file, "rb") as f:
                 return json.load(f)
         except IOError:
-            logging.warn("Sophos state file not found")
+            logging.info("Sophos state file not found")
         except json.decoder.JSONDecodeError:
             logging.error("Sophos state file not in valid JSON format")
             raise SystemExit()

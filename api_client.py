@@ -249,8 +249,8 @@ class ApiClient:
                    endpoint_name, tenant_obj
                 )
             else:
-                logging.error(tenant_obj["error"])
-                raise Exception(tenant_obj["error"])
+                logging.critical(tenant_obj["error"])
+                raise SystemExit()
         else:
             token_data = config.Token(self.config.token_info)
             results = self.make_token_request(
@@ -461,9 +461,8 @@ class ApiClient:
                 )
                 return whoami_response
         else:
-            logging.info(
-                "JWT token not found for client id :: %s"
-                % self.config.client_id
+            logging.error(
+                "JWT token not found for client id"
             )
             return response
 
