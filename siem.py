@@ -376,7 +376,7 @@ def get_alerts_or_events(endpoint, options, config, state):
     """
     api_client_obj = api_client.ApiClient(endpoint, options, config, state)
     results = api_client_obj.get_alerts_or_events()
-
+    
     if config.format == "json":
         write_json_format(results, config)
     elif config.format == "keyvalue":

@@ -134,7 +134,9 @@ class ApiClient:
         Arguments:
             logdir {string}: log directory path
         """
+        
         if self.config.filename == "syslog":
+            
             syslog_facility = self.get_syslog_facilities()
             facility = syslog_facility[self.config.facility]
             address = self.config.address
@@ -143,12 +145,24 @@ class ApiClient:
                 host = result[0]
                 port = result[1]
                 address = (host, int(port))
-
             socktype = SYSLOG_SOCKTYPE[self.config.socktype]
+            
+            if socktype == socket.SOCK_STREAM : 
+                #Check whether host is available within 3s for TCP!
+                timeout_seconds = 3
+                try:
+                    sock = socket.create_connection(address, timeout=timeout_seconds)
+                except :
+                    logging.critical(f"Could not connect to {self.config.address} via TCP after {timeout_seconds} seconds")
+                    raise SystemExit()
+            else: #UDP
+                logging.warning(f"Using UDP to connect to {self.config.address} - If target is not found, logs will be lost!")
+
             logging_handler = logging.handlers.SysLogHandler(
                 address, facility, socktype
             )
             logging_handler.append_nul = self.config.append_nul == "true"
+            
         elif self.config.filename == "stdout":
             logging_handler = logging.StreamHandler(sys.stdout)
         else:
