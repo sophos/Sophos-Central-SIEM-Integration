@@ -1,4 +1,4 @@
-# Copyright 2019-2021 Sophos Limited
+# Copyright 2019-2023 Sophos Limited
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in
 # compliance with the License.
@@ -22,8 +22,8 @@ import os
 import siem
 import unittest
 
-from mock import MagicMock
-from mock import patch
+from unittest.mock import MagicMock
+from unittest.mock import patch
 
 
 class TestSiem(unittest.TestCase):
@@ -34,13 +34,14 @@ class TestSiem(unittest.TestCase):
         self.LOGGER_MOCK = MagicMock()
         siem.SIEM_LOGGER = self.LOGGER_MOCK
 
+    @patch("config.Config")
     @patch("name_mapping.update_fields")
-    def test_write_json_format(self, mock_update_fields):
+    def test_write_json_format(self, mock_update_fields, mock_config):
         # Setup
         results = [{"key": "value"}]
 
         # Run
-        siem.write_json_format(results)
+        siem.write_json_format(results, mock_config)
 
         # Verify
         self.assertEqual(mock_update_fields.call_count, 1)
@@ -48,13 +49,14 @@ class TestSiem(unittest.TestCase):
         self.assertEqual(self.LOGGER_MOCK.info.call_count, 1)
         self.LOGGER_MOCK.info.assert_called_with(u'{"key": "value"}')
 
+    @patch("config.Config")
     @patch("name_mapping.update_fields")
-    def test_write_keyvalue_format(self, mock_update_fields):
+    def test_write_keyvalue_format(self, mock_update_fields, mock_config):
         # Setup
         results = [{"rt": "date"}]
 
         # Run
-        siem.write_keyvalue_format(results)
+        siem.write_keyvalue_format(results, mock_config)
 
         # Verify
         self.assertEqual(mock_update_fields.call_count, 1)
@@ -62,13 +64,14 @@ class TestSiem(unittest.TestCase):
         self.assertEqual(self.LOGGER_MOCK.info.call_count, 1)
         self.LOGGER_MOCK.info.assert_called_with(u'date rt="date";')
 
+    @patch("config.Config")
     @patch("name_mapping.update_fields")
-    def test_write_cef_format(self, mock_update_fields):
+    def test_write_cef_format(self, mock_update_fields, mock_config):
         # Setup
         results = [{"key": "value"}]
 
         # Run
-        siem.write_cef_format(results)
+        siem.write_cef_format(results, mock_config)
 
         # Verify
         self.assertEqual(mock_update_fields.call_count, 1)
@@ -105,25 +108,29 @@ class TestSiem(unittest.TestCase):
         result = siem.map_severity("low_test")
         self.assertEqual(result, 0)
 
-    def test_update_cef_keys(self):
+    @patch("config.Config")
+    def test_update_cef_keys(self, mock_config):
+        mock_config.convert_dhost_field_to_valid_fqdn = "true"
+
         same_key_value_data = {"name": "test_name"}
         different_key_value_data = {"device_event_class_id": "test_type"}
-        siem.update_cef_keys(same_key_value_data)
+        siem.update_cef_keys(same_key_value_data, mock_config)
         self.assertEqual(same_key_value_data, {"name": "test_name"})
-        siem.update_cef_keys(different_key_value_data)
+        siem.update_cef_keys(different_key_value_data, mock_config)
         self.assertEqual(different_key_value_data, {"type": "test_type"})
         invalid_host_key_value_data = {"location": "John's MacBook"}
-        siem.update_cef_keys(invalid_host_key_value_data)
+        siem.update_cef_keys(invalid_host_key_value_data, mock_config)
         self.assertEqual(invalid_host_key_value_data, {"dhost": "john-s-macbook"})
 
-    def test_format_cef(self):
+    @patch("config.Config")
+    def test_format_cef(self, mock_config):
         data = {
             "device_event_class_id": "Event::TestEndpoint::TestSuccess",
             "severity": "high",
             "source": "suser",
             "when": "end",
         }
-        result = siem.format_cef(data)
+        result = siem.format_cef(data, mock_config)
         self.assertEqual(
             result,
             "CEF:0|sophos|sophos central|1.0|NA|NA|8|type=Event::TestEndpoint::TestSuccess suser=suser end=end",
