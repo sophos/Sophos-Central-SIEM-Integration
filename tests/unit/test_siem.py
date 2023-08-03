@@ -24,6 +24,7 @@ import unittest
 
 from unittest.mock import MagicMock
 from unittest.mock import patch
+from unittest.mock import call
 
 
 class TestSiem(unittest.TestCase):
@@ -48,6 +49,56 @@ class TestSiem(unittest.TestCase):
         mock_update_fields.assert_called_with(siem.log, results[0])
         self.assertEqual(self.LOGGER_MOCK.info.call_count, 1)
         self.LOGGER_MOCK.info.assert_called_with(u'{"key": "value"}')
+
+    @patch("config.Config")
+    @patch("name_mapping.update_fields")
+    def test_write_non_streamed_json_format(self, mock_update_fields, mock_config):
+        # Setup
+        results = [{"key0": "value0"}, {"key1": "value1"}, {"key2": "value2"}]
+
+        # Run
+        siem.write_non_streamed_json_format(results, mock_config)
+
+        # Verify
+        self.assertEqual(mock_update_fields.call_count, 3)
+        expected_update_field_calls = [call.do_work(siem.log, results[0]),
+                          call.do_work(siem.log, results[1]),
+                          call.do_work(siem.log, results[2])]
+        mock_update_fields.assert_has_calls(expected_update_field_calls)
+        self.assertEqual(self.LOGGER_MOCK.info.call_count, 3)
+        expected_log_calls = [call.do_work(u'[{"key0": "value0"},'),
+                              call.do_work(u'{"key1": "value1"},'),
+                              call.do_work(u'{"key2": "value2"}]')]
+        self.LOGGER_MOCK.info.assert_has_calls(expected_log_calls)
+
+    @patch("config.Config")
+    @patch("name_mapping.update_fields")
+    def test_write_non_streamed_json_format_single_item(self, mock_update_fields, mock_config):
+        # Setup
+        results = [{"key0": "value0"}]
+
+        # Run
+        siem.write_non_streamed_json_format(results, mock_config)
+
+        # Verify
+        self.assertEqual(mock_update_fields.call_count, 1)
+        mock_update_fields.assert_called_with(siem.log, results[0])
+        self.assertEqual(self.LOGGER_MOCK.info.call_count, 1)
+        self.LOGGER_MOCK.info.assert_called_with(u'[{"key0": "value0"}]')
+
+    @patch("config.Config")
+    @patch("name_mapping.update_fields")
+    def test_write_non_streamed_json_format_no_items(self, mock_update_fields, mock_config):
+        # Setup
+        results = []
+
+        # Run
+        siem.write_non_streamed_json_format(results, mock_config)
+
+        # Verify
+        self.assertEqual(mock_update_fields.call_count, 0)
+        self.assertEqual(self.LOGGER_MOCK.info.call_count, 1)
+        self.LOGGER_MOCK.info.assert_called_with(u'[]')
 
     @patch("config.Config")
     @patch("name_mapping.update_fields")

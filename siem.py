@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright 2019-2021 Sophos Limited
+# Copyright 2019-2023 Sophos Limited
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -89,6 +89,31 @@ def write_json_format(results, config):
         update_cef_keys(i, config)
         name_mapping.update_fields(log, i)
         SIEM_LOGGER.info(json.dumps(i, ensure_ascii=False).strip())
+
+
+def write_non_streamed_json_format(results, config):
+    """Write JSON format data.
+    Arguments:
+        results {list}: data
+        config {Config}: configuration
+    """
+    if not results:
+        SIEM_LOGGER.info("[]")
+        return
+
+    for count, result in enumerate(results):
+        result = remove_null_values(result)
+        update_cef_keys(result, config)
+        name_mapping.update_fields(log, result)
+        if count == 0:
+            prefix = "["
+        else:
+            prefix = ""
+        if count == len(results) - 1:
+            suffix = "]"
+        else:
+            suffix = ","
+        SIEM_LOGGER.info(prefix + json.dumps(result, ensure_ascii=False).strip() + suffix)
 
 
 def write_keyvalue_format(results, config):
@@ -411,4 +436,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
