@@ -1,4 +1,4 @@
-# Copyright 2019-2021 Sophos Limited
+# Copyright 2019-2023 Sophos Limited
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in
 # compliance with the License.
@@ -20,13 +20,12 @@
 import os
 import shutil
 import api_client
-import sys
 import unittest
 import json
 import time
 
-from mock import MagicMock
-from mock import patch
+from unittest.mock import MagicMock
+from unittest.mock import patch
 
 
 class Options:
