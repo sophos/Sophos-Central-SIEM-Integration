@@ -406,6 +406,8 @@ def get_alerts_or_events(endpoint, options, config, state):
         write_keyvalue_format(results, config)
     elif config.format == "cef":
         write_cef_format(results, config)
+    elif config.format == "non-streamed-json":
+        write_non_streamed_json_format(results, config)
     else:
         write_json_format(results, config)
 

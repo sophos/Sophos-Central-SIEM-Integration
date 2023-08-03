@@ -80,7 +80,9 @@ config.ini is a configuration file that exists by default in the siem-scripts fo
 
 ##### Optional configuration steps:
 
-1. Under json, cef or keyvalue, you could choose the preferred output of the response i.e. json, cef or keyvalue.
+1. Under json, cef or keyvalue, you could choose the preferred output of the response i.e. json, cef, keyvalue or non-streamed-json.
+   1. json format is designed for Newline-Delimited JSON, a Streamed JSON format used by logging systems such as Splunk, where each new line is a separate json object.
+   2. non-streamed-json format is designed to output the entire output as an array, where the entire file can be loaded by a tool that expects the entire file to be one single array, such as the import JSON function in MS Excel.
 2. Under filename, you can specify the filename that your output would be saved to. Options are syslog, stdout or any custom file name. Custom files are created in a folder named log.
 3. If you are using syslog then under syslog properties in the config file, configure address, facility and socktype.
 4. under state_file_path, specify the full or relative path to the cache file (with a ".json" extension)
@@ -102,7 +104,7 @@ Run `python siem.py` and you should see the results as specified in the config f
 
 ### License
 
-Copyright 2016-2021 Sophos Limited
+Copyright 2016-2023 Sophos Limited
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at: [LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
