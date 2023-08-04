@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright 2019-2021 Sophos Limited
+# Copyright 2019-2023 Sophos Limited
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in
 # compliance with the License.
@@ -414,7 +414,7 @@ class ApiClient:
         Returns:
             dict -- response containing either list of tenant or error
         """
-        self.log("Fetching the tenants/customers list by calling the Sophos Cental API")
+        self.log("Fetching the tenants/customers list by calling the Sophos Central API")
         response = self.get_sophos_jwt()
 
         if "access_token" in response:

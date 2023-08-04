@@ -101,7 +101,9 @@ def write_non_streamed_json_format(results, config):
         SIEM_LOGGER.info("[]")
         return
 
-    for count, result in enumerate(results):
+    results_list = list(results)
+
+    for count, result in enumerate(results_list):
         result = remove_null_values(result)
         update_cef_keys(result, config)
         name_mapping.update_fields(log, result)
@@ -109,7 +111,7 @@ def write_non_streamed_json_format(results, config):
             prefix = "["
         else:
             prefix = ""
-        if count == len(results) - 1:
+        if count == len(results_list) - 1:
             suffix = "]"
         else:
             suffix = ","
