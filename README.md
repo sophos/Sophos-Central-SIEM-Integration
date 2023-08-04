@@ -81,7 +81,7 @@ config.ini is a configuration file that exists by default in the siem-scripts fo
 ##### Optional configuration steps:
 
 1. Under json, cef or keyvalue, you could choose the preferred output of the response i.e. json, cef, keyvalue or non-streamed-json.
-   1. json format is designed for Newline-Delimited JSON, a Streamed JSON format used by logging systems such as Splunk, where each new line is a separate json object.
+   1. json format is designed for JSON Lines format (aka Newline Delimited JSON). This is a Streamed JSON format, designed to be imported into logging services, such as Splunk; where each line is a separate json object.
    2. non-streamed-json format is designed to output the entire output as an array, where the entire file can be loaded by a tool that expects the entire file to be one single array, such as the import JSON function in MS Excel.
 2. Under filename, you can specify the filename that your output would be saved to. Options are syslog, stdout or any custom file name. Custom files are created in a folder named log.
 3. If you are using syslog then under syslog properties in the config file, configure address, facility and socktype.
