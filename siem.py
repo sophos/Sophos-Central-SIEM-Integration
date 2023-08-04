@@ -381,7 +381,7 @@ def load_config(config_path):
     return cfg
 
 def validate_format(format):
-    if format not in ("json", "keyvalue", "cef"):
+    if format not in ("json", "keyvalue", "cef", "non-streamed-json"):
         raise Exception("Invalid format in config.ini, format can be json, cef or keyvalue")
 
 def validate_endpoint(endpoint):
