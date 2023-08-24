@@ -91,8 +91,8 @@ def write_json_format(results, config):
         SIEM_LOGGER.info(json.dumps(i, ensure_ascii=False).strip())
 
 
-def write_non_streamed_json_format(results, config):
-    """Write JSON format data.
+def write_json_array_format(results, config):
+    """Write JSON Array format data.
     Arguments:
         results {list}: data
         config {Config}: configuration
@@ -383,7 +383,7 @@ def load_config(config_path):
     return cfg
 
 def validate_format(format):
-    if format not in ("json", "keyvalue", "cef", "non-streamed-json"):
+    if format not in ("json", "keyvalue", "cef", "jsonarray"):
         raise Exception("Invalid format in config.ini, format can be json, cef or keyvalue")
 
 def validate_endpoint(endpoint):
@@ -408,8 +408,8 @@ def get_alerts_or_events(endpoint, options, config, state):
         write_keyvalue_format(results, config)
     elif config.format == "cef":
         write_cef_format(results, config)
-    elif config.format == "non-streamed-json":
-        write_non_streamed_json_format(results, config)
+    elif config.format == "jsonarray":
+        write_json_array_format(results, config)
     else:
         write_json_format(results, config)
 

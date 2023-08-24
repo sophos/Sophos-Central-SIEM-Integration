@@ -1,8 +1,8 @@
 # v2.2.0
 
-This release adds a new output format, `non-streamed-json`. This outputs the alerts and events as an array of json objects. 
+This release adds a new output format, `jsonarray`. This outputs the alerts and events as an array of json objects. 
 This allows the file to be read by tools that expect the file to be a single json object (such as MS Excel import JSON data), 
-rather than the JSON Lines (aka Newline Delimited JSON) format created using the default `json` output format, designed for Streamed 
+rather than the JSON Lines (aka Newline Delimited JSON or jsonl) format created using the default `json` output format, designed for Streamed 
 JSON parsers, used by logging services, such as Splunk. 
 
 # v2.1.0

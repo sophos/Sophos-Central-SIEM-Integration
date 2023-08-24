@@ -52,12 +52,12 @@ class TestSiem(unittest.TestCase):
 
     @patch("config.Config")
     @patch("name_mapping.update_fields")
-    def test_write_non_streamed_json_format(self, mock_update_fields, mock_config):
+    def test_write_json_array_format(self, mock_update_fields, mock_config):
         # Setup
         results = [{"key0": "value0"}, {"key1": "value1"}, {"key2": "value2"}]
 
         # Run
-        siem.write_non_streamed_json_format(results, mock_config)
+        siem.write_json_array_format(results, mock_config)
 
         # Verify
         self.assertEqual(mock_update_fields.call_count, 3)
@@ -73,12 +73,12 @@ class TestSiem(unittest.TestCase):
 
     @patch("config.Config")
     @patch("name_mapping.update_fields")
-    def test_write_non_streamed_json_format_single_item(self, mock_update_fields, mock_config):
+    def test_write_json_array_format_single_item(self, mock_update_fields, mock_config):
         # Setup
         results = [{"key0": "value0"}]
 
         # Run
-        siem.write_non_streamed_json_format(results, mock_config)
+        siem.write_json_array_format(results, mock_config)
 
         # Verify
         self.assertEqual(mock_update_fields.call_count, 1)
@@ -88,12 +88,12 @@ class TestSiem(unittest.TestCase):
 
     @patch("config.Config")
     @patch("name_mapping.update_fields")
-    def test_write_non_streamed_json_format_no_items(self, mock_update_fields, mock_config):
+    def test_write_json_array_format_no_items(self, mock_update_fields, mock_config):
         # Setup
         results = []
 
         # Run
-        siem.write_non_streamed_json_format(results, mock_config)
+        siem.write_json_array_format(results, mock_config)
 
         # Verify
         self.assertEqual(mock_update_fields.call_count, 0)

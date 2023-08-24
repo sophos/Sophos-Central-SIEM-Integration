@@ -80,9 +80,9 @@ config.ini is a configuration file that exists by default in the siem-scripts fo
 
 ##### Optional configuration steps:
 
-1. Under `format`, you could choose the preferred output of the response i.e. `json`, `cef`, `keyvalue` or `non-streamed-json`.
+1. Under `format`, you could choose the preferred output of the response i.e. `json`, `cef`, `keyvalue` or `jsonarray`.
    1. `json` format is designed for JSON Lines format (aka Newline Delimited JSON). This is a Streamed JSON format, designed to be imported into logging services, such as Splunk; where each line is a separate json object.
-   2. `non-streamed-json` format is designed to output the entire output as an array, where the entire file can be loaded by a tool that expects the entire file to be one single array, such as the import JSON function in MS Excel. `non-streamed-json`, by its very nature, is not designed to be appended to. When using this format the output file (`result.txt`) should be cleared down/renamed before each run. `json` format should be used when using `syslog` configuration.
+   2. `jsonarray` format is designed to output the entire output as an array, where the entire file can be loaded by a tool that expects the entire file to be one single array, such as the import JSON function in MS Excel. `jsonarray`, by its very nature, is not designed to be appended to. When using this format the output file (`result.txt`) should be cleared down/renamed before each run. `json` format should be used when using `syslog` configuration.
 2. Under `filename`, you can specify the filename that your output would be saved to. Options are syslog, stdout or any custom file name. Custom files are created in a folder named log.
 3. If you are using syslog then under `# syslog properties` in the config file, configure `address`, `facility` and `socktype`.
 4. under `state_file_path`, specify the full or relative path to the cache file (with a ".json" extension)
