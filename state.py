@@ -15,7 +15,7 @@ import sys
 import os
 import json
 from pathlib import Path
-
+import logging
 
 class State:
     def __init__(self, options, state_file):
@@ -35,14 +35,7 @@ class State:
         self.create_state_dir(self.state_file)
         self.state_data = self.load_state_file()
 
-    def log(self, log_message):
-        """Write the log.
-        Arguments:
-            log_message {string} -- log content
-        """
-        if not self.options.quiet:
-            sys.stderr.write("%s\n" % log_message)
-
+  
     def create_state_dir(self, state_file):
         """Create state directory
         Arguments:
@@ -81,9 +74,10 @@ class State:
             with open(self.state_file, "rb") as f:
                 return json.load(f)
         except IOError:
-            self.log("Sophos state file not found")
+            logging.info(f"Sophos state file not found; Reinitialize Communication; state file={self.state_file} ")
         except json.decoder.JSONDecodeError:
-            raise SystemExit("Sophos state file not in valid JSON format")
+            logging.error("Sophos state file not in valid JSON format")
+            raise SystemExit()
         return {}
 
     def save_state(self, state_data_key, state_data_value):
@@ -112,5 +106,5 @@ class State:
             try:
                 f.write(data)
             except Exception as e:
-                self.log("Error :: %s" % e)
+                logging.error(e)
                 pass

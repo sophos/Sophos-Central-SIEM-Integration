@@ -68,13 +68,7 @@ class ApiClient:
         self.opener = self.create_request_builder()
         self.get_noisy_event_types = self.get_noisy_event_types()
 
-    def log(self, log_message):
-        """Write the log.
-        Arguments:
-            log_message {string} -- log content
-        """
-        if not self.options.quiet:
-            sys.stderr.write("%s\n" % log_message)
+
 
     def get_noisy_event_types(self):
         """Return noisy event types
@@ -111,7 +105,7 @@ class ApiClient:
                 os.makedirs(log_dir)
                 return log_dir
             except OSError as e:
-                self.log("Failed to create %s, %s" % (log_dir, str(e)))
+                logging.error("Failed to create %s, %s" % (log_dir, str(e)))
                 sys.exit(1)
         return log_dir
 
@@ -140,7 +134,9 @@ class ApiClient:
         Arguments:
             logdir {string}: log directory path
         """
+        
         if self.config.filename == "syslog":
+            
             syslog_facility = self.get_syslog_facilities()
             facility = syslog_facility[self.config.facility]
             address = self.config.address
@@ -149,12 +145,24 @@ class ApiClient:
                 host = result[0]
                 port = result[1]
                 address = (host, int(port))
-
             socktype = SYSLOG_SOCKTYPE[self.config.socktype]
+            
+            if socktype == socket.SOCK_STREAM : 
+                #Check whether host is available within 3s for TCP!
+                timeout_seconds = 3
+                try:
+                    sock = socket.create_connection(address, timeout=timeout_seconds)
+                except :
+                    logging.critical(f"Could not connect to {self.config.address} via TCP after {timeout_seconds} seconds")
+                    raise SystemExit()
+            else: #UDP
+                logging.warning(f"Using UDP to connect to {self.config.address} - If target is not found, logs will be lost!")
+
             logging_handler = logging.handlers.SysLogHandler(
                 address, facility, socktype
             )
             logging_handler.append_nul = self.config.append_nul == "true"
+            
         elif self.config.filename == "stdout":
             logging_handler = logging.StreamHandler(sys.stdout)
         else:
@@ -198,15 +206,17 @@ class ApiClient:
                 response = self.opener.open(request)
             except urlerror.HTTPError as e:
                 if e.code in (503, 504, 403, 429):
-                    self.log(
+                    logging.error(
                         'Error "%s" (code %s) on attempt #%s of %s, retrying'
                         % (e, e.code, i, retry_count)
+                       
                     )
                     if i < retry_count:
                         continue
-                self.log(
+                logging.error(
                     "Error during request. Error code: %s, Error message: %s"
                     % (e.code, e.read())
+                    
                 )
                 raise
             return response.read()
@@ -219,13 +229,13 @@ class ApiClient:
         endpoint_name = self.endpoint.rsplit("/", 1)[-1]
 
         if self.options.light and self.endpoint == ENDPOINT_MAP["event"][0]:
-            self.log(
+            logging.info(
                 "Light mode - not retrieving:%s" % "; ".join(self.get_noisy_event_types)
             )
 
-        self.log(
-            "Config endpoint=%s, filename='%s' and format='%s'"
-            % (self.endpoint, self.config.filename, self.config.format)
+        logging.info(
+            "Config endpoint=%s, filename='%s', format='%s', address='%s', socktype='%s'"
+            % (self.endpoint, self.config.filename, self.config.format, self.config.address, self.config.socktype)
         )
 
         if (
@@ -239,8 +249,8 @@ class ApiClient:
                    endpoint_name, tenant_obj
                 )
             else:
-                self.log("Error :: %s" % tenant_obj["error"])
-                raise Exception(tenant_obj["error"])
+                logging.critical(tenant_obj["error"])
+                raise SystemExit()
         else:
             token_data = config.Token(self.config.token_info)
             results = self.make_token_request(
@@ -258,10 +268,10 @@ class ApiClient:
             events {list} -- API response
         """
         events_request_url = "%s%s?%s" % (api_host, self.endpoint, args)
-        self.log("URL: %s" % events_request_url)
+        logging.debug("URL: %s" % events_request_url)
         events_response = self.request_url(events_request_url, None, default_headers)
         if self.options.debug:
-            self.log("RESPONSE: %s" % events_response)
+            logging.info("RESPONSE: %s" % events_response)
         events = json.loads(events_response)
         return events
 
@@ -326,11 +336,12 @@ class ApiClient:
             events = self.call_endpoint(token.url, default_headers, args)
 
             if "items" in events and len(events["items"]) > 0:
+                logging.info(f"Found {len(events['items'])} new events")
                 for e in events["items"]:
                     e["datastream"] = EVENT_TYPE if (self.endpoint == EVENTS_V1) else ALERT_TYPE
                     yield e
             else:
-                self.log(
+                logging.info(
                     "No new %s data retrieved from the API"
                     % endpoint_name
                 )
@@ -374,13 +385,14 @@ class ApiClient:
             data_region_url = tenant_obj["apiHost"] if "idType" not in tenant_obj else tenant_obj["apiHosts"]["dataRegion"]
             events = self.call_endpoint(data_region_url, default_headers, args)
             if "items" in events and len(events["items"]) > 0:
+                logging.info(f"Retrieved {len(events['items'])} new events")
                 for e in events["items"]:
                     e["datastream"] = (
                         EVENT_TYPE if (self.endpoint == EVENTS_V1) else ALERT_TYPE
                     )
                     yield e
             else:
-                self.log(
+                logging.info(
                     "No new %s data retrieved from the API"
                     % endpoint_name
                 )
@@ -402,9 +414,9 @@ class ApiClient:
         since = 12
         if self.options.since:
             since = self.options.since
-            self.log("Retrieving results since: %s" % since)
+            logging.info("Retrieving results since: %s" % since)
         else:
-            self.log("No datetime found for %s, defaulting to last 12 hours for results" % endpoint_name)
+            logging.info("No datetime found for %s, defaulting to last 12 hours for results" % endpoint_name)
             since = self.get_past_datetime(12)
         return since
 
@@ -414,7 +426,7 @@ class ApiClient:
         Returns:
             dict -- response containing either list of tenant or error
         """
-        self.log("Fetching the tenants/customers list by calling the Sophos Cental API")
+        logging.debug("Fetching the tenants/customers list by calling the Sophos Cental API")
         response = self.get_sophos_jwt()
 
         if "access_token" in response:
@@ -443,15 +455,14 @@ class ApiClient:
                         tenant_data["access_token"] = access_token
                 return tenant_data
             else:
-                self.log(
+                logging.info(
                     "Whoami data not found for client id :: %s"
                     % self.config.client_id
                 )
                 return whoami_response
         else:
-            self.log(
-                "JWT token not found for client id :: %s"
-                % self.config.client_id
+            logging.error(
+                "JWT token not found for client id"
             )
             return response
 
@@ -461,7 +472,7 @@ class ApiClient:
         Returns:
             dict -- response containing either of jwt token or error
         """
-        self.log("fetching access_token from sophos")
+        logging.debug("fetching access_token from sophos")
         client_id = self.config.client_id
         client_secret = self.config.client_secret
         body = {
@@ -470,7 +481,9 @@ class ApiClient:
             "client_id": client_id,
             "client_secret": client_secret,
         }
-        self.log("body :: %s" % str(body))
+        # NEVER LOG OUTPUT OF THE Authentication Parameters
+        # If this goes to a syslog, you will expose critical information!
+        #l.o.g.g.i.n.g.debug(("body :: %s" % str(body)))
         current_time = time.time()
         cache_client_data = (
             self.state_data["account"][client_id]
@@ -479,7 +492,10 @@ class ApiClient:
         )
 
         if cache_client_data and current_time < cache_client_data["jwtExpiresAt"]:
-            self.log("return token from cache :: %s" % cache_client_data["jwt"])
+            # NEVER LOG OUTPUT OF THE JWT TOKEN
+            # If this goes to a syslog, you will expose critical information!
+            #l.o.g.g.i.n.g.debug("return token from cache :: %s" % cache_client_data["jwt"])
+            logging.debug("Found existing jwt token; Reusing")
             return {"access_token": cache_client_data["jwt"]}
         else:
             try:
@@ -495,13 +511,13 @@ class ApiClient:
                     "account.%s.jwtExpiresAt" % client_id,
                     time.time() + (response_data["expires_in"] - 120),
                 )
-                self.log("response :: %s" % str(response_data))
+                logging.debug("Found existing jwt token; Reusing")
                 return response_data
             except json.decoder.JSONDecodeError as e:
-                self.log("Sophos Token API response not in valid json format")
+                logging.error("Sophos Token API response not in valid json format")
                 return {"error": e}
             except Exception as e:
-                self.log("Error :: %s" % e)
+                logging.error(e)
                 return {"error": e}
 
     def get_whoami_data(self, access_token):
@@ -512,23 +528,23 @@ class ApiClient:
         Returns:
             dict -- response containing whoami response or error
         """
-        self.log("fetching whoami data")
+        logging.debug("fetching whoami data")
         try:
             whoami_url = f"https://{self.config.api_host}/whoami/v1"
             default_headers = {"Authorization": "Bearer " + access_token}
             whoami_response = self.request_url(whoami_url, None, default_headers)
 
-            self.log("Whoami response: %s" % whoami_response)
+            logging.debug("Whoami response: %s" % whoami_response)
             whoami_data = json.loads(whoami_response)
             self.state.save_state(
                 "account.%s.whoami" % self.config.client_id, whoami_data
             )
             return whoami_data
         except json.decoder.JSONDecodeError as e:
-            self.log("Sophos whoami API response not in json format")
+            logging.error("Sophos whoami API response not in json format")
             return {"error": e}
         except Exception as e:
-            self.log("Error :: %s" % e)
+            logging.error(e)
             return {"error": e}
 
     def get_partner_organization_tenants(self, whoami_response, access_token):
@@ -566,11 +582,11 @@ class ApiClient:
             )
             tenant_response = self.request_url(tenant_url, None, default_headers, 1)
 
-            self.log("Tenant response: %s" % (tenant_response))
+            logging.info("Tenant response: %s" % (tenant_response))
             return json.loads(tenant_response)
 
         except json.decoder.JSONDecodeError as e:
-            self.log(f"Sophos {whoami_response['idType']} tenant API response not in json format")
+            logging.error(f"Sophos {whoami_response['idType']} tenant API response not in json format")
             return {"error": e}
         except Exception as e:
             raise Exception(

@@ -15,6 +15,8 @@ import sys
 import json
 import logging
 import logging.handlers
+import datetime
+import logging_config #Make sure to have here, before import state!
 import os
 import re
 import state
@@ -374,7 +376,7 @@ def get_alerts_or_events(endpoint, options, config, state):
     """
     api_client_obj = api_client.ApiClient(endpoint, options, config, state)
     results = api_client_obj.get_alerts_or_events()
-
+    
     if config.format == "json":
         write_json_format(results, config)
     elif config.format == "keyvalue":
@@ -405,7 +407,18 @@ def run(options, config_data, state):
 
 def main():
     options = parse_args_options()
+
+    logging.Formatter.formatTime = (lambda self, record, datefmt=None: datetime.datetime.fromtimestamp(record.created, datetime.timezone.utc).astimezone().isoformat(sep="T",timespec="milliseconds"))
+  
+
+
     config_data = load_config(options.config)
+    logging.info("Logging Level is set as: "+config_data.logging_level)
+    logger = logging.getLogger()
+    logger.setLevel(config_data.logging_level)
+    if (logger.level <= logging.DEBUG):
+        logger.handlers[0].setFormatter(logging.Formatter(logging_config.DEBUG_FORMAT))
+       
     state_data = state.State(options, config_data.state_file_path)
     run(options, config_data, state_data)
 

@@ -1,0 +1,30 @@
+---
+version: '3'
+services:
+  sophos-siem:
+    image: hmsdevops/sophos-siem
+    build:
+      context: .
+      dockerfile: Dockerfile-alpine
+    container_name: sophos-siem
+    volumes:
+      - /var/lib/docker/sophos-siem:/opt/sophos-siem:rw
+      - ./config.ini:/opt/sophos-siem/config.ini:ro
+    restart: always
+    networks:
+      - sophos-siem-net
+    logging:
+      driver: "syslog"
+      options:
+        labels: "sophos-siem"
+        env: "docker"
+        syslog-address: "udp://somesyslogserver:514"
+        syslog-format: "rfc3164"
+        tag: "docker-sophos_siem"
+
+networks:
+  sophos-siem-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.200.14.0/24
